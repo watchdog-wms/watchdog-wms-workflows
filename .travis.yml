@@ -1,0 +1,24 @@
+language: java
+sudo: false 
+dist: xenial
+jdk: openjdk11
+
+before_script:
+  - git clone 'https://github.com/klugem/watchdog' 'watchdog'
+  - export WATCHDOG_BASE=$(pwd)'/watchdog/'
+  - export WATCHDOG_PR_CHECKER=${WATCHDOG_BASE}'build/jars/moduleValidator.jar'
+  - ls "${WATCHDOG_PR_CHECKER}" > /dev/null 2>&1
+
+matrix:
+  include:
+  - name: 'signed commit test'
+    env: TEST_NAME='SIGNED_COMMIT'
+  - name: 'write permission test'
+    env: TEST_NAME='WRITE_PERMISSION'
+  - name: 'separate module test'
+    env: TEST_NAME='SINGLE_MODULE'
+  - name: 'XSD validation test'
+    env: TEST_NAME='XSD_VALIDATION'
+  - name: 'XML documentation test'
+    env: TEST_NAME='XML_DOCUMENTATION'
+script: java -jar "${WATCHDOG_PR_CHECKER}" -check "${TEST_NAME}"
