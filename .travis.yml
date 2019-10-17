@@ -1,24 +1,43 @@
 language: java
-sudo: false 
 dist: xenial
 jdk: openjdk11
-
+cache:
+  directories:
+    - ${HOME}/cache/watchdog
+    - ${HOME}/cache/watchdog_modules
+    - ${HOME}/cache/clamav
+    
 before_script:
-  - git clone 'https://github.com/klugem/watchdog' 'watchdog'
-  - export WATCHDOG_BASE=$(pwd)'/watchdog/'
-  - export WATCHDOG_PR_CHECKER=${WATCHDOG_BASE}'build/jars/moduleValidator.jar'
+  - export WATCHDOG_BASE="${HOME}/cache/watchdog/"
+  - RET=$(git -C "${WATCHDOG_BASE}" rev-parse HEAD || echo "NO_GIT")
+  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_BASE}"; git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_BASE}"; fi
+  - git -C "${WATCHDOG_BASE}" pull -f
+  - git -C "${WATCHDOG_BASE}" rev-parse HEAD
+  - export WATCHDOG_MODULES_DIRS="${HOME}/cache/watchdog_modules/"
+  - RET=$(git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD || echo "NO_GIT")
+  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES_DIRS}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES_DIRS}"; fi
+  - git -C "${WATCHDOG_MODULES_DIRS}" pull -f
+  - git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD
+  - export WATCHDOG_PR_CHECKER="${WATCHDOG_BASE}jars/workflowValidator.jar"
   - ls "${WATCHDOG_PR_CHECKER}" > /dev/null 2>&1
+  
+stages:
+  - stage1
+  - stage2
+  - stage3
 
 matrix:
   include:
-  - name: 'signed commit test'
-    env: TEST_NAME='SIGNED_COMMIT'
-  - name: 'write permission test'
-    env: TEST_NAME='WRITE_PERMISSION'
-  - name: 'separate module test'
-    env: TEST_NAME='SINGLE_MODULE'
-  - name: 'XSD validation test'
-    env: TEST_NAME='XSD_VALIDATION'
-  - name: 'XML documentation test'
-    env: TEST_NAME='XML_DOCUMENTATION'
+    - stage: stage1
+      name: 'signed commit test'
+      env: TEST_NAME='SIGNED_COMMIT'
+    - name: 'separate folder test'
+      env: TEST_NAME='SEPARATE_FOLDER'
+    - stage: stage2 
+      name: 'XML validation test'
+      env: TEST_NAME='XML_VALIDATION'
+    - stage: stage3
+      name: 'virus scan test'
+      script: /bin/bash "${WATCHDOG_BASE}/helper_scripts/travisCI_clamAV.sh"
+
 script: java -jar "${WATCHDOG_PR_CHECKER}" -check "${TEST_NAME}"
