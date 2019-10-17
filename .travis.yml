@@ -13,11 +13,11 @@ before_script:
   - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_HOME}"; git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_HOME}"; fi
   - git -C "${WATCHDOG_HOME}" pull -f
   - git -C "${WATCHDOG_HOME}" rev-parse HEAD
-  - export WATCHDOG_MODULES="${HOME}/cache/watchdog_modules/"
-  - RET=$(git -C "${WATCHDOG_MODULES}" rev-parse HEAD || echo "NO_GIT")
-  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES}"; fi
-  - git -C "${WATCHDOG_MODULES}" pull -f
-  - git -C "${WATCHDOG_MODULES}" rev-parse HEAD
+  - export WATCHDOG_MODULES_DIRS="${HOME}/cache/watchdog_modules/"
+  - RET=$(git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD || echo "NO_GIT")
+  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES_DIRS}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES}"; fi
+  - git -C "${WATCHDOG_MODULES_DIRS}" pull -f
+  - git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD
   - export WATCHDOG_PR_CHECKER="${WATCHDOG_HOME}jars/workflowValidator.jar"
   - ls "${WATCHDOG_PR_CHECKER}" > /dev/null 2>&1
   
@@ -40,4 +40,4 @@ matrix:
       name: 'virus scan test'
       script: /bin/bash "${WATCHDOG_HOME}/helper_scripts/travisCI_clamAV.sh"
 
-script: java -jar "${WATCHDOG_PR_CHECKER}" -modules "${WATCHDOG_MODULES}" -check "${TEST_NAME}"
+script: java -jar "${WATCHDOG_PR_CHECKER}" -check "${TEST_NAME}"
