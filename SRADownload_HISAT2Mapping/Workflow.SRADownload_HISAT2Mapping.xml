@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/home/proj/software/watchdog/">
+<!-- TODO: replace by Watchdog installation folder -->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
 
 <!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.0 (1679r) -->
-
 <settings>
-	<modules>
-	<folder>/home/proj/software/watchdog/caro_modules/</folder>
-	</modules>
 	<constants>
 		<!-- TODO: replace by directory containing the SRA_sample_file. This will also be used as output directory for all results-->
-		<const name="WORKING_DIR">/home/users/friedel/Material/watchdog/watchdog2/workflows/SRADownload_HISAT2Mapping/</const>
+		<const name="WORKING_DIR">/tmp/SRADownload_HISAT2Mapping/</const>
 		<!-- TODO: change if other HISAT index should be used-->
 		<const name="HISAT_INDEX_URI">ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/data/hg19.tar.gz</const>
 	</constants>
@@ -31,14 +28,14 @@
 	<environments>
 		<environment name="local" copyLocalValue="true">
 			<!-- TODO: replace by local path to HISAT2 binaries-->
-			<var name="PATH" update="true">/home/proj/software/hisat2/2.1.0/</var>
+			<var name="PATH" update="true">/path/to/hisat2/</var>
 			<!-- TODO: replace by local path to SRA tool kit binaries-->
-			<var name="PATH" update="true">/home/proj/software/sratoolkit.2.9.0-centos_linux64/bin/</var>
+			<var name="PATH" update="true">/path/to/sratoolkit/bin/</var>
 		</environment>
 	</environments>
 </settings>
 <!-- TODO: replace your email delete the email attribute. For email configuration see-->
-<tasks mail="friedel-watchdog@bio.ifi.lmu.de">
+<tasks mail="mail@testmail.com">
 	<wgetTask id="1" name="get HISAT2 index" version="1" maxRunning="1" environment="local">
 		<parameter>
 			<disableSizeCheck>false</disableSizeCheck>
