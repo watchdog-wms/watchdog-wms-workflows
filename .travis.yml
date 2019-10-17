@@ -8,11 +8,11 @@ cache:
     - ${HOME}/cache/clamav
     
 before_script:
-  - export WATCHDOG_HOME="${HOME}/cache/watchdog/"
-  - RET=$(git -C "${WATCHDOG_HOME}" rev-parse HEAD || echo "NO_GIT")
-  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_HOME}"; git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_HOME}"; fi
-  - git -C "${WATCHDOG_HOME}" pull -f
-  - git -C "${WATCHDOG_HOME}" rev-parse HEAD
+  - export WATCHDOG_BASE="${HOME}/cache/watchdog/"
+  - RET=$(git -C "${WATCHDOG_BASE}" rev-parse HEAD || echo "NO_GIT")
+  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_BASE}"; git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_BASE}"; fi
+  - git -C "${WATCHDOG_BASE}" pull -f
+  - git -C "${WATCHDOG_BASE}" rev-parse HEAD
   - export WATCHDOG_MODULES_DIRS="${HOME}/cache/watchdog_modules/"
   - RET=$(git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD || echo "NO_GIT")
   - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES_DIRS}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES_DIRS}"; fi
