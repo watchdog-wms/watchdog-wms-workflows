@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO: replace by Watchdog installation folder -->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
+
+<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.0 (1679r) -->
+<settings>
+	<constants>
+		<!-- TODO: replace by directory containing the SRA_sample_file. This will also be used as output directory for all results-->
+		<const name="WORKING_DIR">/tmp/SRADownload_HISAT2Mapping/</const>
+		<!-- TODO: change if other HISAT index should be used-->
+		<const name="HISAT_INDEX_URI">ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/data/hg19.tar.gz</const>
+	</constants>
+	<executors>
+		<local name="localHost" default="true"/>
+		<!-- TODO: replace by cluster or remote executor with name hisat_executor if you don't want to run HISAT2 on your local computer-->
+		<local name="hisat_executor"/>
+		<!-- example with SLURM cluster executor-->
+		<!--<slurm name="hisat_executor" memory="1G" cluster="serial" partition="serial_mpp2" cpu="16" timelimit="1-0:00" environment="local"/>-->
+		
+		<!-- TODO: replace by cluster or remote executor with name sra_executor if you don't want to run fastq_dump on your local computer-->
+		<local name="sra_executor" />
+		<!-- example with SLURM cluster executor-->
+		<!--<slurm name="sra_executor" default="true" memory="2G" cluster="serial" partition="serial_mpp2" cpu="4" timelimit="0-1:00" environment="local"/>-->
+	</executors>
+	<processBlock>
+		<processTable name="example_sra_input" table="${WORKING_DIR}/SRA_sample_file.txt"/>
+	</processBlock>
+	<environments>
+		<environment name="local" copyLocalValue="true">
+			<!-- TODO: replace by local path to HISAT2 binaries-->
+			<var name="PATH" update="true">/path/to/hisat2/</var>
+			<!-- TODO: replace by local path to SRA tool kit binaries-->
+			<var name="PATH" update="true">/path/to/sratoolkit/bin/</var>
+		</environment>
+	</environments>
+</settings>
+<!-- TODO: replace your email delete the email attribute. For email configuration see-->
+<tasks mail="mail@testmail.com">
+	<wgetTask id="1" name="get HISAT2 index" version="1" maxRunning="1" environment="local">
+		<parameter>
+			<disableSizeCheck>false</disableSizeCheck>
+			<output>${WORKING_DIR}</output>
+			<uri>${HISAT_INDEX_URI}</uri>
+		</parameter>
+		<streams>
+			<stderr>${WORKING_DIR}/.download_hisat2_index.err</stderr>
+			<stdout>${WORKING_DIR}/.download_hisat2_index.out</stdout>
+		</streams>
+	</wgetTask>
+
+	<untarTask id="2" name="extract HISAT2 index" version="1" environment="local">
+		<dependencies>
+			<depends>1</depends>
+		</dependencies>
+		<parameter>
+			<infile>${WORKING_DIR}/hg19.tar.gz</infile>
+			<outputdir>${WORKING_DIR}/hisat2_index/</outputdir>
+		</parameter>
+		<streams>
+			<stderr>${WORKING_DIR}/.untar.err</stderr>
+			<stdout>${WORKING_DIR}/.untar.out</stdout>
+		</streams>
+	</untarTask>
+
+	<!-- download fastq files for all SRA ids in SRA_sample_file.txt -->
+	<fastqDumpTask id="3" name="download from SRA" version="1" environment="local" processBlock="example_sra_input" executor="sra_executor" maxRunning="2">
+		<dependencies>
+			<depends>2</depends>
+		</dependencies>
+		<parameter>
+			<checkPresent>false</checkPresent>
+			<outputFolder>${WORKING_DIR}/SRA/</outputFolder>
+			<sraId>{$run_accession}</sraId>
+		</parameter>
+		<streams>
+			<stderr>${WORKING_DIR}/SRA/.fastdump_{$run_accession}.err</stderr>
+			<stdout>${WORKING_DIR}/SRA/.fastdump_{$run_accession}.out</stdout>
+		</streams>
+	</fastqDumpTask>
+
+	<!-- run HISAT2 on all downloaded fastq files -->
+	<HISAT2Task id="4" name="HISAT2" version="1" environment="local" processBlock="example_sra_input" executor="hisat_executor" maxRunning="6">
+		<dependencies>
+			<depends separate="true">3</depends>
+		</dependencies>
+		<parameter>
+			<index>${WORKING_DIR}/hisat2_index/hg19/genome</index>
+			<output>${WORKING_DIR}/HISAT2/{$run_accession}.sam</output>
+			<paired1>${WORKING_DIR}/SRA/{$run_accession}_1.fastq</paired1>
+			<paired2>${WORKING_DIR}/SRA/{$run_accession}_2.fastq</paired2>
+			<threads>8</threads>	</parameter>
+
+		<streams>
+		<stderr>${WORKING_DIR}/HISAT2/.hisat2_{$run_accession}.err</stderr>
+		<stdout>${WORKING_DIR}/HISAT2/.hisat2_{$run_accession}.out</stdout>
+		</streams>
+	</HISAT2Task>
+
+    <!-- convert sam to bam, rename output file according to experiment name in SRA_sample_file-->
+	<sam2bamTask id="5" name="sam2bam" version="1" environment="local" processBlock="example_sra_input" executor="hisat_executor" maxRunning="6">
+        <dependencies>
+			<depends separate="true">4</depends>
+        </dependencies>
+		<parameter>
+			<sam>${WORKING_DIR}/HISAT2/{$run_accession}.sam</sam>
+			<bam>${WORKING_DIR}/HISAT2/{$experiment_name}.bam</bam>
+			<threads>4</threads>
+		</parameter>
+		<streams>
+			<stdout>${WORKING_DIR}/HISAT2/.{$run_accession}.sam2bam.out</stdout>
+			<stderr>${WORKING_DIR}/HISAT2/.{$run_accession}.sam2bam.err</stderr>
+		</streams>
+		</sam2bamTask>
+                 
+		<!-- index the bam file -->
+	<indexBamTask id="6" name="indexBam" version="1" environment="local" processBlock="example_sra_input" executor="hisat_executor" maxRunning="6">
+		<dependencies>
+			<depends separate="true">5</depends>
+		</dependencies>
+		<parameter>
+			<bam>${WORKING_DIR}/HISAT2/{$experiment_name}.bam</bam>
+		</parameter>
+		<streams>
+			<stdout>${WORKING_DIR}/HISAT2/.{$run_accession}.index.out</stdout>
+			<stderr>${WORKING_DIR}/HISAT2/.{$run_accession}.index.err</stderr>
+		</streams>
+		<actions time="onSuccess">
+			<deleteFile file="${WORKING_DIR}/HISAT2/{$run_accession}.sam" />
+		</actions>
+	</indexBamTask>
+
+</tasks>
+</watchdog>
+
