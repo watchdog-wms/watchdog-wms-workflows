@@ -8,17 +8,17 @@ cache:
     - ${HOME}/cache/clamav
     
 before_script:
-  - export WATCHDOG_HOME="${HOME}/cache/watchdog/"
-  - RET=$(git -C "${WATCHDOG_HOME}" rev-parse HEAD || echo "NO_GIT")
-  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_HOME}"; git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_HOME}"; fi
-  - git -C "${WATCHDOG_HOME}" pull -f
-  - git -C "${WATCHDOG_HOME}" rev-parse HEAD
+  - export WATCHDOG_BASE="${HOME}/cache/watchdog/"
+  - RET=$(git -C "${WATCHDOG_BASE}" rev-parse HEAD || echo "NO_GIT")
+  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_BASE}"; git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_BASE}"; fi
+  - git -C "${WATCHDOG_BASE}" pull -f
+  - git -C "${WATCHDOG_BASE}" rev-parse HEAD
   - export WATCHDOG_MODULES_DIRS="${HOME}/cache/watchdog_modules/"
   - RET=$(git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD || echo "NO_GIT")
   - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES_DIRS}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES_DIRS}"; fi
   - git -C "${WATCHDOG_MODULES_DIRS}" pull -f
   - git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD
-  - export WATCHDOG_PR_CHECKER="${WATCHDOG_HOME}jars/workflowValidator.jar"
+  - export WATCHDOG_PR_CHECKER="${WATCHDOG_BASE}jars/workflowValidator.jar"
   - ls "${WATCHDOG_PR_CHECKER}" > /dev/null 2>&1
   
 stages:
@@ -34,10 +34,10 @@ matrix:
     - name: 'separate folder test'
       env: TEST_NAME='SEPARATE_FOLDER'
     - stage: stage2 
-    - name: 'XML validation test'
+      name: 'XML validation test'
       env: TEST_NAME='XML_VALIDATION'
     - stage: stage3
       name: 'virus scan test'
-      script: /bin/bash "${WATCHDOG_HOME}/helper_scripts/travisCI_clamAV.sh"
+      script: /bin/bash "${WATCHDOG_BASE}/helper_scripts/travisCI_clamAV.sh"
 
 script: java -jar "${WATCHDOG_PR_CHECKER}" -check "${TEST_NAME}"
