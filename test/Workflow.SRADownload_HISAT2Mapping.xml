@@ -5,6 +5,7 @@
 	
 <!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.0 (1679r) -->
 <settings>
+	
 	<constants>
 		<!-- TODO: replace by directory containing the SRA_sample_file. This will also be used as output directory for all results-->
 		<const name="WORKING_DIR">/tmp/SRADownload_HISAT2Mapping/</const>
