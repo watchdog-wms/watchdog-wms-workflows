@@ -2,7 +2,6 @@
 <!-- TODO: replace by Watchdog installation folder -->
 <watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
 
-	
 <!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.0 (1679r) -->
 <settings>
 	<constants>
