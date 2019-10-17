@@ -34,7 +34,7 @@ matrix:
     - name: 'separate folder test'
       env: TEST_NAME='SEPARATE_FOLDER'
     - stage: stage2 
-    - name: 'XML validation test'
+      name: 'XML validation test'
       env: TEST_NAME='XML_VALIDATION'
     - stage: stage3
       name: 'virus scan test'
