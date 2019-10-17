@@ -38,6 +38,6 @@ matrix:
       env: TEST_NAME='XML_VALIDATION'
     - stage: stage3
       name: 'virus scan test'
-      script: /bin/bash "${WATCHDOG_HOME}/helper_scripts/travisCI_clamAV.sh"
+      script: /bin/bash "${WATCHDOG_BASE}/helper_scripts/travisCI_clamAV.sh"
 
 script: java -jar "${WATCHDOG_PR_CHECKER}" -check "${TEST_NAME}"
