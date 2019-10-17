@@ -15,7 +15,7 @@ before_script:
   - git -C "${WATCHDOG_HOME}" rev-parse HEAD
   - export WATCHDOG_MODULES_DIRS="${HOME}/cache/watchdog_modules/"
   - RET=$(git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD || echo "NO_GIT")
-  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES_DIRS}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES}"; fi
+  - if [ $RET == "NO_GIT" ]; then rm -r "${WATCHDOG_MODULES_DIRS}"; git clone --depth=1 --branch master 'https://github.com/watchdog-wms/watchdog-wms-modules' "${WATCHDOG_MODULES_DIRS}"; fi
   - git -C "${WATCHDOG_MODULES_DIRS}" pull -f
   - git -C "${WATCHDOG_MODULES_DIRS}" rev-parse HEAD
   - export WATCHDOG_PR_CHECKER="${WATCHDOG_HOME}jars/workflowValidator.jar"
