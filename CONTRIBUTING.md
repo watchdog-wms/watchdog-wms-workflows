@@ -1,0 +1,53 @@
+### Contributing
+
+Contributions to the [watchdog-wms-workflows](watchdog-wms/watchdog-wms-workflows) repository are welcome!
+If you want to share a workflow, please follow these steps:
+
+1) fork the repository and create a new branch for your new workflow
+2) commit your workflow into your fork
+    - either use the webinterface of Github (buttons are located left of green "Clone or Download" button)
+        - Create new file: create and commit a single file in a web editor
+        - Upload Files Button: use drag & drop gestures to upload multiple files or complete folders
+    - or clone the repository and use the git command line tools to create and push a new commit
+3) create a pull request
+4) automatic tests will be performed on your pull request (by Travis CI)
+5) members of the contributor team can merge your pull request if all checks succeed
+
+More detailed instructions how to contribute to a github repository can be found [here](https://github.com/firstcontributions/first-contributions).
+
+
+### Join the contributor team
+Members of the contributor team have write access to the repository and can merge pull requests if all Travis CI checks succeeded.
+
+To become a member, please follow these steps:
+1) share a few workflows
+2) request to become a member by mentioning watchdog-wms-bot in one of your pull requests (just include '@watchdog-wms-bot' in your comment)
+
+### workflow structure
+
+Workflows shared in the repository have to located in separate directories. Each workflow directory has to contain the XML workflow file (*workflowName.xml*) and may optionally contain example data. Workflows should be documented with inline comments. Furthermore, lines that require modifications to adapt e.g. to different computing environments or input data should be highlighted in order to allow everyone to quickly adapt the workflow.
+
+Example:
+
+    SRADownload_HISAT2Mapping
+    ├── Workflow.SRADownload_HISAT2Mapping.xml
+    └── SRA_sample_file.txt
+  
+More information on how to create a workflow can be found in the [documentation](https://rawgit.com/klugem/watchdog/master/documentation/Watchdog-manual.html).
+   
+### Automatic tests on pull requests
+
+Before a pull request can be merged with the master branch some Travis CI tests must succeed.
+Currently the following tests are implemented:
+
+- signed commit test: 
+  - only [signed commits](https://help.github.com/en/articles/signing-commits) can be merged 
+- separate folder test: 
+  - all files affected by the pull request must be located in one folder (which must be a child of the root folder)
+- XML validation test:
+  - XML documentation file must follow its [XSD schema](https://github.com/watchdog-wms/watchdog-wms/blob/master/xsd/watchdog.xsd)
+  - all used modules must be part of [watchdog-wms-modules](https://github.com/watchdog-wms/watchdog-wms-modules)
+  - if a process table is used, the path must point to ${WF_PARENT}/nameOfTheFile.csv to be found
+- virus scanner test: 
+  - all files part of the pull request must pass the virus scan
+
