@@ -1,0 +1,2 @@
+run_accession	experiment_name	experiment_library_layout	experiment_library_strategy
+SRR5756317	Salt_stress_4sU-RNA_1-2h_Rep1	PAIRED	RNA-Seq
