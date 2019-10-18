@@ -23,7 +23,7 @@
 		<!--<slurm name="sra_executor" default="true" memory="2G" cluster="serial" partition="serial_mpp2" cpu="4" timelimit="0-1:00" environment="local"/>-->
 	</executors>
 	<processBlock>
-		<processTable name="example_sra_input" table="${WORKING_DIR}/SRA_sample_file.txt"/>
+		<processTable name="example_sra_input" table="${WF_PARENT}/SRA_sample_file.txt"/>
 	</processBlock>
 	<environments>
 		<environment name="local" copyLocalValue="true">
