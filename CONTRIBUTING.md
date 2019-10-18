@@ -1,6 +1,6 @@
 ### Contributing
 
-Contributions to the [watchdog-wms-workflows](watchdog-wms/watchdog-wms-workflows) repository are welcome!
+Contributions to the [watchdog-wms-workflows](https://github.com/watchdog-wms/watchdog-wms-workflows) repository are welcome!
 If you want to share a workflow, please follow these steps:
 
 1) fork the repository and create a new branch for your new workflow
@@ -23,7 +23,7 @@ To become a member, please follow these steps:
 1) share a few workflows
 2) request to become a member by mentioning watchdog-wms-bot in one of your pull requests (just include '@watchdog-wms-bot' in your comment)
 
-### workflow structure
+### Workflow structure
 
 Workflows shared in the repository have to located in separate directories. Each workflow directory has to contain the XML workflow file (*workflowName.xml*) and may optionally contain example data. Workflows should be documented with inline comments. Furthermore, lines that require modifications to adapt e.g. to different computing environments or input data should be highlighted in order to allow everyone to quickly adapt the workflow.
 
@@ -45,7 +45,7 @@ Currently the following tests are implemented:
 - separate folder test: 
   - all files affected by the pull request must be located in one folder (which must be a child of the root folder)
 - XML validation test:
-  - XML documentation file must follow its [XSD schema](https://github.com/watchdog-wms/watchdog-wms/blob/master/xsd/watchdog.xsd)
+  - XML workflow file must follow its [XSD schema](https://github.com/klugem/watchdog/blob/master/xsd/watchdog.xsd)
   - all used modules must be part of [watchdog-wms-modules](https://github.com/watchdog-wms/watchdog-wms-modules)
   - if a process table is used, the path must point to ${WF_PARENT}/nameOfTheFile.csv to be found
 - virus scanner test: 
