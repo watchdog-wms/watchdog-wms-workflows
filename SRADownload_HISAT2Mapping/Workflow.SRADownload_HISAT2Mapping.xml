@@ -31,11 +31,14 @@
 			<var name="PATH" update="true">/path/to/hisat2/</var>
 			<!-- TODO: replace by local path to SRA tool kit binaries-->
 			<var name="PATH" update="true">/path/to/sratoolkit/bin/</var>
+			<!-- TODO: replace by local path to samtools binaries-->
+			<var name="PATH" update="true">/path/to/samtools/</var>
 		</environment>
 	</environments>
 </settings>
 <!-- TODO: replace your email delete the email attribute. For email configuration see-->
 <tasks mail="mail@testmail.com">
+	<!-- downloads HISAT2 index first, if already available in the file system, skip tasks 1 and 2 using the -start 3 option of the Watchdog command-line tool-->
 	<wgetTask id="1" name="get HISAT2 index" version="1" maxRunning="1" environment="local">
 		<parameter>
 			<disableSizeCheck>false</disableSizeCheck>
@@ -48,6 +51,7 @@
 		</streams>
 	</wgetTask>
 
+	<!-- decompresses HISAT2 index using tar-->
 	<untarTask id="2" name="extract HISAT2 index" version="1" environment="local">
 		<dependencies>
 			<depends>1</depends>
@@ -84,12 +88,15 @@
 			<depends separate="true">3</depends>
 		</dependencies>
 		<parameter>
+			<!-- If HISAT2 is already available in the file system, replace index path below-->
 			<index>${WORKING_DIR}/hisat2_index/hg19/genome</index>
 			<output>${WORKING_DIR}/HISAT2/{$run_accession}.sam</output>
 			<paired1>${WORKING_DIR}/SRA/{$run_accession}_1.fastq</paired1>
 			<paired2>${WORKING_DIR}/SRA/{$run_accession}_2.fastq</paired2>
-			<threads>8</threads>	</parameter>
-
+			<!-- for unpaired sequencing data replace paired1 and paired2 elements by the following<!-->
+			<!--<unpaired>${WORKING_DIR}/SRA/{$run_accession}.fastq</unpaired>-->
+			<threads>8</threads>
+		</parameter>
 		<streams>
 		<stderr>${WORKING_DIR}/HISAT2/.hisat2_{$run_accession}.err</stderr>
 		<stdout>${WORKING_DIR}/HISAT2/.hisat2_{$run_accession}.out</stdout>
