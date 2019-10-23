@@ -5,24 +5,24 @@
 		<settings>
 
 		<constants>
-			<!-- tab separated file, one line per sample, must at least contain one column with header NAME, containing the name of the sample, FASTQ files must have the form NAME_1.fastq and NAME_2.fastq, alignment files from (linear) spliced read aligner must have the form NAME.bam, additional required column STRANDED indicates strandedness: 0 no strand, 1 first read is forward, 2 second read is forward-->
+			<!-- tab separated file, one line per sample, must at least contain one column with header NAME, containing the name of the sample, FASTQ files must have the form NAME_1.fastq and NAME_2.fastq, alignment files from (linear) spliced read aligner must have the form NAME.bam, additional required column STRANDED indicates strandedness: 0 no strand, 1 first read is forward, 2 second read is forward -->
 			<const name="SRA_TAB_PE">${WF_PARENT}/SRA_sample_list.txt</const>			
 
-			<!-- output folder for large tempory files, TODO: change path-->
+			<!-- output folder for large tempory files, TODO: change path -->
 			<const name="OUT_TMP">/path/to/tmpdir/</const>
 			
-			<!-- output folder for final results, TODO: change path--->
+			<!-- output folder for final results, TODO: change path -->
 			<const name="OUT_KEEP">/path/to/finaldir/</const>
 			
-			<!-- subfolder for output folder for final results- -->
+			<!-- subfolder for output folder for final results -->
 			<const name="CIRI_KEEP">${OUT_KEEP}ciri/</const>
 			<const name="CF_KEEP">${OUT_KEEP}circ_rna_finder/</const>
 			<const name="CIRC_KEEP">${OUT_KEEP}circs/</const>
 			
-			<!-- folder for log files, standard out and standard err-->
+			<!-- folder for log files, standard out and standard err -->
 			<const name="LOGS">${OUT_KEEP}/logfiles</const>
 			
-			<!-- folders for bam and fastq files for SRA samples listed in SRA_sample_list.txt, TODO: change paths accordingly--->
+			<!-- folders for bam and fastq files for SRA samples listed in SRA_sample_list.txt, TODO: change paths accordingly -->
 			<!-- download and mapping can be performed e.g. using workflow Workflow.SRADownload_HISAT2Mapping.xml -->
 			<const name="MAPPING_FOLDER">/path/to/bamfiles/</const>
 			<const name="FASTQ_FOLDER">/path/to/fastq/files/</const>
@@ -31,26 +31,26 @@
 			<const name="CIRI_END">ciriCirc.txt</const>
 			<const name="CF_END">cfCirc.txt</const>
 			
-			<!-- file paths to reference genome and indices, TODO: change paths-->   
-			<!-- path to genome sequence in fasta format-->
+			<!-- file paths to reference genome and indices, TODO: change paths -->   
+			<!-- path to genome sequence in fasta format -->
 			<const name="REF_FA">//path/to/genome_hg19.fa</const>
-			<!-- path to gene annotation in GTF format-->
+			<!-- path to gene annotation in GTF format -->
 			<const name="REF_ANNO">//path/to/gene_annotation_hg19.gtf</const>
-			<!-- path to BWA index (without .(amb|ann|bwt|pac|sa))-->
+			<!-- path to BWA index (without .(amb|ann|bwt|pac|sa)) -->
 			<const name="REF_BWA">//path/to/bwa/hg19</const>
-			<!-- path to STAR index directory-->
+			<!-- path to STAR index directory -->
 			<const name="REF_STAR">/path/to/star_index</const>
 			
-			<!-- file path to CIRI program, TODO: change path-->
+			<!-- file path to CIRI program, TODO: change path -->
 			<const name="CIRI2_SCRIPT">//path/to//CIRI2.pl</const>
-			<!-- file path to circRNA_finder program, TODO: change path--->
+			<!-- file path to circRNA_finder program, TODO: change path -->
 			<const name="CF_SCRIPT">/path/to/circRNA_Finder/postProcessStarAlignment.pl</const>
 		</constants>
 
-		<!-- add required software to PATH-->
+		<!-- add required software to PATH -->
 		<environments>
 			<environment name="local" copyLocalValue="true">
-				<!-- file path to STAR binary, TODO: change path-->
+				<!-- file path to STAR binary, TODO: change path -->
 				<var name="PATH" update="true">/path/to/STAR/</var>
 				<!-- file path to bwa binary, required by CIRI2, TODO: change path -->
 				<var name="PATH" update="true">/path/to/BWA/</var>
@@ -70,7 +70,7 @@
 	
 	</settings>
 	
-	<!-- TODO: replace your email delete the email attribute. For email configuration see manual-->
+	<!-- TODO: replace your email delete the email attribute. For email configuration see manual -->
 	<tasks mail="mail@testmail.com">
 
 		<!-- runs CIRI2 on FASTQ files -->
@@ -223,7 +223,7 @@
 			</streams>
 		</removeLinearReadsTask>
 		
-		<!-- copies results from read filtering step to final output folder; when finished succesfully deletes large tempory files (from STAR and bwa); all final files will be in folder ${OUT_TMP}; folder ${OUT_TMP} can be deleted-->
+		<!-- copies results from read filtering step to final output folder; when finished succesfully deletes large tempory files (from STAR and bwa); all final files will be in folder ${OUT_TMP}; folder ${OUT_TMP} can be deleted -->
 		<copyFileTask id="10" name="backup_read_rem" processBlock="sra_ids" executor="localHost" environment="local">
 			<dependencies>
 				<depends separate="true">9</depends>
@@ -236,7 +236,7 @@
 				<stdout>${LOGS}/{$NAME}.read_removal.backup.out</stdout>
 				<stderr>${LOGS}/{$NAME}.read_removal.backup.err</stderr>
 			</streams>
-			<!-- deletes very large tempory files-->
+			<!-- deletes very large tempory files -->
 			<actions time="onSuccess">
 				<deleteFile file="${OUT_TMP}/{$NAME}/cf/{$NAME}_Chimeric.out.sam"/>
 				<deleteFile file="${OUT_TMP}/{$NAME}/cf/{$NAME}_Chimeric.out.junction"/>
