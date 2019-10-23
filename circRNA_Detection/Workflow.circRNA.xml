@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO: replace Watchdog installation folder -->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/path/to/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+
+		<settings>
+		<constants>
+			<!-- tab separated file, one line per sample, must at least contain one column with header NAME, containing the name of the sample, FASTQ files must have the form NAME_1.fastq and NAME_2.fastq, alignment files from (linear) spliced read aligner must have the form NAME.bam, additional required column STRANDED indicates strandedness: 0 no strand, 1 first read is forward, 2 second read is forward -->
+			<const name="SRA_TAB_PE">${WF_PARENT}/SRA_sample_list.txt</const>			
+
+			<!-- output folder for large tempory files, TODO: change path -->
+			<const name="OUT_TMP">/path/to/tmpdir/</const>
+			
+			<!-- output folder for final results, TODO: change path -->
+			<const name="OUT_KEEP">/path/to/finaldir/</const>
+			
+			<!-- subfolder for output folder for final results -->
+			<const name="CIRI_KEEP">${OUT_KEEP}ciri/</const>
+			<const name="CF_KEEP">${OUT_KEEP}circ_rna_finder/</const>
+			<const name="CIRC_KEEP">${OUT_KEEP}circs/</const>
+			
+			<!-- folder for log files, standard out and standard err -->
+			<const name="LOGS">${OUT_KEEP}/logfiles</const>
+			
+			<!-- folders for bam and fastq files for SRA samples listed in SRA_sample_list.txt, TODO: change paths accordingly -->
+			<!-- download and mapping can be performed e.g. using workflow Workflow.SRADownload_HISAT2Mapping.xml -->
+			<const name="MAPPING_FOLDER">/path/to/bamfiles/</const>
+			<const name="FASTQ_FOLDER">/path/to/fastq/files/</const>
+			
+			<!-- file endings hard-coded in modules -->
+			<const name="CIRI_END">ciriCirc.txt</const>
+			<const name="CF_END">cfCirc.txt</const>
+			
+			<!-- file paths to reference genome and indices, TODO: change paths -->   
+			<!-- path to genome sequence in fasta format -->
+			<const name="REF_FA">/path/to/genome_hg19.fa</const>
+			<!-- path to gene annotation in GTF format -->
+			<const name="REF_ANNO">/path/to/gene_annotation_hg19.gtf</const>
+			<!-- path to BWA index (without .(amb|ann|bwt|pac|sa)) -->
+			<const name="REF_BWA">/path/to/bwa/hg19</const>
+			<!-- path to STAR index directory -->
+			<const name="REF_STAR">/path/to/star_index/</const>
+			
+			<!-- file path to CIRI program, TODO: change path -->
+			<const name="CIRI2_SCRIPT">/path/to/CIRI2.pl</const>
+			<!-- file path to circRNA_finder program, TODO: change path -->
+			<const name="CF_SCRIPT">/path/to/circRNA_Finder/postProcessStarAlignment.pl</const>
+		</constants>
+
+		<!-- add required software to PATH -->
+		<environments>
+			<environment name="local" copyLocalValue="true">
+				<!-- file path to STAR binary, TODO: change path -->
+				<var name="PATH" update="true">/path/to/STAR/</var>
+				<!-- file path to bwa binary, required by CIRI2, TODO: change path -->
+				<var name="PATH" update="true">/path/to/BWA/</var>
+				<!-- file path to samtools, required by circRNA_finder, TODO: change path -->
+				<var name="PATH" update="true">/path/to/samtools/</var>
+			</environment>
+		</environments>
+		
+		<processBlock>
+			<processTable name="sra_ids" table="${SRA_TAB_PE}"/>
+		</processBlock>
+
+		<executors>
+			<local name="localHost" stickToHost="true" maxRunning="2" default="true"/>
+		</executors>
+	
+	</settings>
+	
+	<!-- TODO: replace your email delete the email attribute. For email configuration see manual -->
+	<tasks mail="mail@testmail.com">
+
+		<!-- runs CIRI2 on FASTQ files -->
+		<ciri2Task id="1" name="CIRI2" processBlock="sra_ids" executor="localHost" maxRunning="1" environment="local">
+			<parameter>
+				<inReads1>${FASTQ_FOLDER}/{$NAME}_1.fastq</inReads1>
+				<inReads2>${FASTQ_FOLDER}/{$NAME}_2.fastq</inReads2>
+				<reference>${REF_FA}</reference>
+				<outPrefix>${OUT_TMP}/{$NAME}/ciri/{$NAME}_</outPrefix>
+				<bwaThreads>8</bwaThreads>
+				<bwaScoreThreshold>19</bwaScoreThreshold>
+				<bwaIndex>${REF_BWA}</bwaIndex>
+				<ciriPath>${CIRI2_SCRIPT}</ciriPath>
+				<ciriThreads>4</ciriThreads>
+				<ciriAnnotation>${REF_ANNO}</ciriAnnotation>
+			</parameter>
+			<streams saveResourceUsage="true">
+				<stdout>${LOGS}/{$NAME}.ciri.out</stdout>
+				<stderr>${LOGS}/{$NAME}.ciri.err</stderr>
+			</streams>
+		</ciri2Task>
+
+		<!-- copies CIRI2 result to final output folder -->
+		<copyFileTask id="2" name="backup_ciri_1" processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">1</depends>
+			</dependencies>
+			<parameter>
+				<sourcePath>${OUT_TMP}/{$NAME}/ciri/{$NAME}_rawPred.txt</sourcePath>
+				<targetPath>${CIRI_KEEP}/{$NAME}_rawPred.txt</targetPath>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/{$NAME}.ciri.backup1.out</stdout>
+				<stderr>${LOGS}/{$NAME}.ciri.backup1.err</stderr>
+			</streams>
+		</copyFileTask>
+
+		<!-- copies CIRI2 result to final output folder -->
+		<copyFileTask id="3" name="backup_ciri_2" processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">2</depends>
+			</dependencies>
+			<parameter>
+				<sourcePath>${OUT_TMP}/{$NAME}/ciri/{$NAME}_${CIRI_END}</sourcePath>
+				<targetPath>${CIRI_KEEP}/{$NAME}_${CIRI_END}</targetPath>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/{$NAME}.ciri.backup2.out</stdout>
+				<stderr>${LOGS}/{$NAME}.ciri.backup2.err</stderr>
+			</streams>
+		</copyFileTask>
+
+		<!-- runs circRNA_finder on FASTQ files -->
+		<circRNAfinderTask id="4" name="circRNA_finder" processBlock="sra_ids" executor="localHost" maxRunning="1" environment="local">
+			<parameter>
+				<inReads1>${FASTQ_FOLDER}/{$NAME}_1.fastq</inReads1>
+				<inReads2>${FASTQ_FOLDER}/{$NAME}_2.fastq</inReads2>
+				<outPrefix>${OUT_TMP}/{$NAME}/cf/{$NAME}_</outPrefix>
+				<starIndex>${REF_STAR}</starIndex>
+				<starThreads>16</starThreads>
+				<cfPath>${CF_SCRIPT}</cfPath>
+				<strandedLibrary>{$STRANDED}</strandedLibrary>
+			</parameter>
+			<streams saveResourceUsage="true">
+				<stdout>${LOGS}/{$NAME}.circrna_finder.out</stdout>
+				<stderr>${LOGS}/{$NAME}.circrna_finder.err</stderr>
+			</streams>
+		</circRNAfinderTask>
+
+		<!-- copies circRNA_finder result to final output folder -->
+		<copyFileTask id="5" name="backup_cf1" processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">4</depends>
+			</dependencies>
+			<parameter>
+				<sourcePath>${OUT_TMP}/{$NAME}/cf/{$NAME}_s_filteredJunctions.bed</sourcePath>
+				<targetPath>${CF_KEEP}/{$NAME}_s_filteredJunctions.bed</targetPath>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/{$NAME}.circrna_finder.backup1.out</stdout>
+				<stderr>${LOGS}/{$NAME}.circrna_finder.backup1.err</stderr>
+			</streams>
+		</copyFileTask>
+
+		<!-- copies circRNA_finder result to final output folder -->
+		<copyFileTask id="6" name="backup_cf2" processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">5</depends>
+			</dependencies>
+			<parameter>
+				<sourcePath>${OUT_TMP}/{$NAME}/cf/{$NAME}_${CF_END}</sourcePath>
+				<targetPath>${CF_KEEP}/{$NAME}_${CF_END}</targetPath>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/{$NAME}.circrna_finder.backup2.out</stdout>
+				<stderr>${LOGS}/{$NAME}.circrna_finder.backup2.err</stderr>
+			</streams>
+		</copyFileTask>
+
+		<!-- combines CIRI2 and circRNA_finder results -->
+		<circCombinationTask id="7" name="circRNA_combination"  processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">6</depends>
+				<depends separate="true">3</depends>
+			</dependencies>
+			<parameter>
+				<inCircs1>${OUT_TMP}/{$NAME}/ciri/{$NAME}_${CIRI_END}</inCircs1>
+				<inCircs2>${OUT_TMP}/{$NAME}/cf/{$NAME}_${CF_END}</inCircs2>
+				<outUnion>${OUT_TMP}/{$NAME}/{$NAME}_union.txt</outUnion>
+				<outIntersection>${OUT_TMP}/{$NAME}/{$NAME}_intersection.txt</outIntersection>
+				<outIntersectedUnion>${OUT_TMP}/{$NAME}/{$NAME}_intersectedUnion.txt</outIntersectedUnion>
+				<minReads>2</minReads>
+			</parameter>
+			<streams saveResourceUsage="true">
+				<stdout>${LOGS}/{$NAME}.combination.out</stdout>
+				<stderr>${LOGS}/{$NAME}.combination.err</stderr>
+			</streams>
+		</circCombinationTask>
+
+		<!-- copies combined result to final output folder -->
+		<copyFileTask id="8" name="backup_combi"  processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">7</depends>
+			</dependencies>
+			<parameter>
+				<sourcePath>${OUT_TMP}/{$NAME}/{$NAME}_intersectedUnion.txt</sourcePath>
+				<targetPath>${CIRC_KEEP}/{$NAME}_intersectedUnion.txt</targetPath>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/{$NAME}.combination.backup.out</stdout>
+				<stderr>${LOGS}/{$NAME}.combination.backup.err</stderr>
+			</streams>
+		</copyFileTask>
+
+		<!-- filters final result for reads that can be mapped in a linear manner -->
+		<removeLinearReadsTask id="9" name="read_removal"   processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">8</depends>
+			</dependencies>
+			<parameter>
+				<circRNAPrediction>${OUT_TMP}/{$NAME}/{$NAME}_intersectedUnion.txt</circRNAPrediction>
+				<mapping>${MAPPING_FOLDER}/{$NAME}.bam</mapping>
+				<circOut>${OUT_TMP}/{$NAME}/{$NAME}_predicted_circs.txt</circOut>
+				<paired>yes</paired>
+				<minReads>2</minReads>
+			</parameter>
+			<streams saveResourceUsage="true">
+				<stdout>${LOGS}/{$NAME}.read_removal.out</stdout>
+				<stderr>${LOGS}/{$NAME}.read_removal.err</stderr>
+			</streams>
+		</removeLinearReadsTask>
+		
+		<!-- copies results from read filtering step to final output folder; when finished succesfully deletes large tempory files (from STAR and bwa); all final files will be in folder ${OUT_TMP}; folder ${OUT_TMP} can be deleted -->
+		<copyFileTask id="10" name="backup_read_rem" processBlock="sra_ids" executor="localHost" environment="local">
+			<dependencies>
+				<depends separate="true">9</depends>
+			</dependencies>
+			<parameter>
+				<sourcePath>${OUT_TMP}/{$NAME}/{$NAME}_predicted_circs.txt</sourcePath>
+				<targetPath>${CIRC_KEEP}/{$NAME}_predicted_circs.txt</targetPath>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/{$NAME}.read_removal.backup.out</stdout>
+				<stderr>${LOGS}/{$NAME}.read_removal.backup.err</stderr>
+			</streams>
+			<!-- deletes very large tempory files -->
+			<actions time="onSuccess">
+				<deleteFile file="${OUT_TMP}/{$NAME}/cf/{$NAME}_Chimeric.out.sam"/>
+				<deleteFile file="${OUT_TMP}/{$NAME}/cf/{$NAME}_Chimeric.out.junction"/>
+				<deleteFile file="${OUT_TMP}/{$NAME}/cf/{$NAME}_Aligned.out.sam"/>
+				<deleteFile file="${OUT_TMP}/{$NAME}/ciri/{$NAME}_bwa.sam"/>
+			</actions>
+		</copyFileTask>
+
+	</tasks>
+</watchdog>
