@@ -20,3 +20,4 @@ Required software:
 * circRNA_finder (download: https://github.com/orzechoj/circRNA_finder)
 * STAR (download: https://github.com/alexdobin/STAR)
 * samtools (download http://www.htslib.org)
+
