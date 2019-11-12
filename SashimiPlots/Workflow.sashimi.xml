@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/home/proj/software/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/path/to/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
   <settings>
-    <modules>
-      <folder>/home/proj/software/watchdog/caro_modules/</folder>
-    </modules>
     <constants>
 	  <!-- TODO: replace by by installation directory of ggsashimi-->
       <const name="GGSASHIMI_PATH">/path/to/ggsashimi/</const>
