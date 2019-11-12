@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/home/proj/software/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+  <settings>
+    <modules>
+      <folder>/home/proj/software/watchdog/caro_modules/</folder>
+    </modules>
+    <constants>
+	  <!-- TODO: replace by by installation directory of ggsashimi-->
+      <const name="GGSASHIMI_PATH">/path/to/ggsashimi/</const>
+	  <!-- TODO: replace by output directory path-->
+      <const name="OUTPUT_DIR">/path/to/output/dir/</const>
+    </constants>
+    <environments>
+      <environment copyLocalValue="true" name="local_env">
+	    <var name="PATH" update="true">${GGSASHIMI_PATH}</var>
+	  </environment>
+    </environments>
+	<executors>
+       <local name="localHost" default="true"/>
+	</executors>
+  </settings>
+  <!-- TODO: replace your email or delete the email attribute. For email configuration see manual-->
+  <tasks mail="mail@testmail.com">
+    <sashimiPlotTask environment="local_env" id="1" name="Example 1">
+      <parameter>
+        <alpha>0.25</alpha>
+        <annheight>4</annheight>
+        <bam>${GGSASHIMI_PATH}/examples/input_bams.tsv</bam>
+        <basesize>20</basesize>
+        <colorfactor>3</colorfactor>
+        <coordinates>chr10:27040584-27048100</coordinates>
+        <gtf>${GGSASHIMI_PATH}/examples/annotation.gtf</gtf>
+        <height>3</height>
+        <mincoverage>10</mincoverage>
+        <outprefix>${OUTPUT_DIR}/test1</outprefix>
+        <overlay>3</overlay>
+        <palette>${GGSASHIMI_PATH}/examples/palette.txt</palette>
+        <shrink>true</shrink>
+        <width>18</width>
+      </parameter>
+    </sashimiPlotTask>
+	
+    <sashimiPlotTask environment="local_env" id="2" name="Example 2">
+      <dependencies>
+        <depends>1</depends>
+      </dependencies>
+      <parameter>
+        <aggr>median</aggr>
+        <alpha>1</alpha>
+        <bam>${GGSASHIMI_PATH}/examples/input_bams.tsv</bam>
+        <basesize>16</basesize>
+        <colorfactor>3</colorfactor>
+        <coordinates>chr10:27040584-27048100</coordinates>
+        <height>3</height>
+        <mincoverage>10</mincoverage>
+        <outformat>tiff</outformat>
+        <outprefix>${OUTPUT_DIR}/test2</outprefix>
+        <outresolution>350</outresolution>
+        <overlay>3</overlay>
+        <shrink>false</shrink>
+        <width>18</width>
+      </parameter>
+    </sashimiPlotTask>
+	
+  </tasks>
+</watchdog>
