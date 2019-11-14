@@ -72,6 +72,7 @@
 				<decompress>true</decompress>
 				<input>{}</input>
 				<output>${FASTQ_TMP}/[1]</output>
+				<!-- TODO: can be used for fast testing of whole workflow -->
 				<limitLines>100000</limitLines>
 			</parameter>
 			<streams>
