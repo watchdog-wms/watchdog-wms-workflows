@@ -25,13 +25,14 @@ To become a member, please follow these steps:
 
 ### Workflow structure
 
-Workflows shared in the repository have to located in separate directories. Each workflow directory has to contain the XML workflow file (*workflowName.xml*) and may optionally contain example data. Workflows should be documented with inline comments. Furthermore, lines that require modifications to adapt e.g. to different computing environments or input data should be highlighted in order to allow everyone to quickly adapt the workflow.
+Workflows shared in the repository have to located in separate directories. Each workflow directory has to contain the XML workflow file (*workflowName.xml*), a README.md ([README template](https://github.com/watchdog-wms/watchdog-wms-workflows/blob/master/README.template.md)) file and may optionally contain example data. Workflows should be documented with inline comments. Furthermore, lines that require modifications to adapt e.g. to different computing environments or input data should be highlighted in order to allow everyone to quickly adapt the workflow.
 
 Example:
 
     SRADownload_HISAT2Mapping
-    ├── Workflow.SRADownload_HISAT2Mapping.xml
-    └── SRA_sample_file.txt
+    ├── README.md
+    ├── SRA_sample_file.txt
+    └── Workflow.SRADownload_HISAT2Mapping.xml
   
 More information on how to create a workflow can be found in the [documentation](https://rawgit.com/klugem/watchdog/master/documentation/Watchdog-manual.html).
    
@@ -48,6 +49,8 @@ Currently the following tests are implemented:
   - XML workflow file must follow its [XSD schema](https://github.com/klugem/watchdog/blob/master/xsd/watchdog.xsd)
   - all used modules must be part of [watchdog-wms-modules](https://github.com/watchdog-wms/watchdog-wms-modules)
   - if a process table is used, the path must point to ${WF_PARENT}/nameOfTheFile.csv to be found
+- README existence test:
+  - test if the README.md file exists (file should be based on the [README template](https://github.com/watchdog-wms/watchdog-wms-workflows/blob/master/README.template.md))
 - virus scanner test: 
   - all files part of the pull request must pass the virus scan
 
