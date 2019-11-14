@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/path/to/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+	<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.1 (1728r) -->
+	<settings>
+		<constants>
+			<!-- output folder for large tempory files, TODO: change path -->
+			<const name="OUT_TMP">/path/to/tmpdir/</const>
+
+			<!-- output folder for final results, TODO: change path -->
+			<const name="OUT_KEEP">/path/to/finaldir/</const>
+
+			<!-- subfolder for output folder for tempory files -->
+			<const name="FASTQ_TMP">${OUT_TMP}/fastq/</const>
+			<const name="BWA_RAW_TMP">${OUT_TMP}/bwa/</const>
+
+			<!-- subfolder for output folder for final results -->
+			<const name="BWA_KEEP">${OUT_KEEP}/bwa/</const>
+			<const name="GEM_KEEP">${OUT_KEEP}/GEM/</const>
+			<const name="PLOTS_KEEP">${OUT_KEEP}/plots/</const>
+
+			<!-- path to paired input fastq files (*_R1.fastq.gz and *_R2.fastq.gz), TODO: change path -->
+			<const name="FASTQ_FOLDER">/path/to/fastq/files/</const>
+
+			<!-- folder for log files, standard out and standard err -->
+			<const name="LOGS">${OUT_KEEP}/logfiles</const>
+
+			<!-- constants to required binaries / files -->
+			<const name="BWA_INDEX">/path/to/bwa/index</const>
+			<const name="BWA_PATH">/path/to/bin/bwa</const>
+			<const name="GEM_JAR">/path/to/jar/gem.jar</const>
+			<const name="GEM_READ_DISTRIBUTION">/path/to/GEM/Read_Distribution_default.txt</const>
+			<const name="BED_PATTERN">*.narrowPeak</const>
+			<const name="MAX_THREADS">16</const> <!-- TODO: modify max threads value -->
+
+			<!-- config for peak annotation -->
+			<!-- TODO: change if non human samples should be processed or another gene annotation package should be used -->
+			<const name="TXDB_DB">TxDb.Hsapiens.UCSC.hg38.knownGene</const>
+			<const name="ANNO_DB">org.Hs.eg.db</const>
+		</constants>
+		<!-- add required software to PATH -->
+		<environments>
+			<environment name="local" copyLocalValue="true">
+				<!-- file path to Rscript binary, TODO: change path -->
+				<var name="PATH" update="true">/path/to/Rscript/</var>
+				<!-- file path to java binary, TODO: change path -->
+				<var name="PATH" update="true">/path/to/java/</var>
+				<!-- file path to samtools TODO: change path -->
+				<var name="PATH" update="true">/path/to/samtools/</var>
+				<!-- file path to python3 TODO: change path -->
+				<var name="PATH" update="true">/path/to/python3/</var>
+				<var name="DISPLAY"></var>
+			</environment>
+		</environments>
+		<executors>
+			<local name="localHost" maxRunning="2"/>
+			<!-- TODO: replace with cluster executor if available -->
+			<local name="cluster" maxRunning="1"/>
+			<!--<sge name="cluster" environment="local" default="true" maxRunning="16" slots="1" memory="8192M" queue="TODO.q" />-->
+		</executors>
+		<processBlock>
+			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz" pattern="*_R[12].fastq.gz" />
+			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz_R1" pattern="*_R1.fastq.gz" />
+			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz_R2" pattern="*_R2.fastq.gz" />
+			<processInput name="pInput" />
+		</processBlock>
+	</settings>
+	<!-- TODO: replace your email delete the email attribute. For email configuration see manual -->
+	<tasks mail="mail@testmail.com">
+		<!-- extract raw FASTQ data -->
+		<gzipTask id="1" processBlock="fastq_gz" executor="cluster" name="extract">
+			<parameter>
+				<decompress>true</decompress>
+				<input>{}</input>
+				<output>${FASTQ_TMP}/[1]</output>
+				<limitLines>100000</limitLines>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[1,_].extract.out</stdout>
+				<stderr>${LOGS}/[1,_].extract.err</stderr>
+			</streams>
+		</gzipTask>
+
+		<!-- align reads using bwa -->
+		<bwaAlnTask id="2" processBlock="fastq_gz_R1" executor="cluster" name="aln_bwa">
+			<dependencies>
+				<depends separate="true">1</depends>
+			</dependencies>
+			<parameter>
+				<inReads>${FASTQ_TMP}/[1]</inReads>
+				<bwaIndex>${BWA_INDEX}</bwaIndex>
+				<bwaPath>${BWA_PATH}</bwaPath>
+				<outSai>${BWA_RAW_TMP}/[2].sai</outSai>
+				<stopIfMoreThanBestHits>5</stopIfMoreThanBestHits>
+				<threads>${MAX_THREADS}</threads>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[2].aln.out</stdout>
+				<stderr>${LOGS}/[2].aln.err</stderr>
+			</streams>
+		</bwaAlnTask>
+
+		<!-- align reads using bwa -->
+		<bwaAlnTask id="3" processBlock="fastq_gz_R2" executor="cluster" name="aln_bwa">
+			<dependencies>
+				<depends separate="true">1</depends>
+			</dependencies>
+			<parameter>
+				<inReads>${FASTQ_TMP}/[1]</inReads>
+				<bwaIndex>${BWA_INDEX}</bwaIndex>
+				<bwaPath>${BWA_PATH}</bwaPath>
+				<outSai>${BWA_RAW_TMP}/[2].sai</outSai>
+				<stopIfMoreThanBestHits>5</stopIfMoreThanBestHits>
+				<threads>${MAX_THREADS}</threads>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[2].aln.out</stdout>
+				<stderr>${LOGS}/[2].aln.err</stderr>
+			</streams>
+		</bwaAlnTask>
+
+
+		<!-- pair reads -->
+		<bwaSampeTask id="4" processBlock="fastq_gz_R1" executor="cluster" name="sampe_bwa">
+			<dependencies>
+				<depends separate="true">2</depends>
+				<depends separate="true" prefixName="[1]" sep="_">3</depends>
+			</dependencies>
+			<parameter>
+				<bwaIndex>${BWA_INDEX}</bwaIndex>
+				<bwaPath>${BWA_PATH}</bwaPath>
+				<inReads1>${FASTQ_TMP}/[1,_]_R1.fastq</inReads1>
+				<inReads2>${FASTQ_TMP}/[1,_]_R2.fastq</inReads2>
+				<inSai1>${BWA_RAW_TMP}/[1,_]_R1.sai</inSai1>
+				<inSai2>${BWA_RAW_TMP}/[1,_]_R2.sai</inSai2>
+				<outSam>${BWA_RAW_TMP}/[1,_].sam</outSam>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[1,_].sampe.out</stdout>
+				<stderr>${LOGS}/[1,_].sampe.err</stderr>
+			</streams>
+		</bwaSampeTask>
+
+		<!-- filter reads based on MAPQ quality and remove unpaired reads -->
+		<filterBwaSampeTask id="5" processBlock="pInput" executor="cluster" name="filter_bwa">
+			<dependencies>
+				<depends separate="true">4</depends>
+			</dependencies>
+			<parameter>
+				<inSamBam>{$bwaPairedSamFile}</inSamBam>
+				<outSamBam>{$bwaPairedSamFile,1}_filtered.sam</outSamBam>
+				<removeImproperPairs>true</removeImproperPairs>
+				<removeUnmapped>true</removeUnmapped>
+				<removeMapqBelow>20</removeMapqBelow>
+				<removeMoreThanOptimalHits>2</removeMoreThanOptimalHits>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[$bwaPairedSamFile,1].filter.out</stdout>
+				<stderr>${LOGS}/[$bwaPairedSamFile,1].filter.err</stderr>
+			</streams>
+		</filterBwaSampeTask>
+
+		<!-- convert SAM to BAM format -->
+		<sam2bamTask id="6" name="sam2bam" processBlock="pInput" executor="cluster" maxRunning="6">
+			<dependencies>
+				<depends separate="true">5</depends>
+			</dependencies>
+			<parameter>
+				<sam>{$filteredPairs}</sam>
+				<bam>${BWA_KEEP}/[$filteredPairs,1,_].bam</bam>
+				<threads>16</threads>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[$filteredPairs,1,_].sam2bam.out</stdout>
+				<stderr>${LOGS}/[$filteredPairs,1,_].sam2bam.err</stderr>
+			</streams>
+		</sam2bamTask>
+
+		<!-- index BAM format -->
+		<indexBamTask id="7" name="indexBam" processBlock="pInput" executor="cluster" maxRunning="6">
+			<dependencies>
+				<depends separate="true">6</depends>
+			</dependencies>
+			<parameter>
+				<bam>{$BAMFile}</bam>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[$BAMFile,1].indexBam.out</stdout>
+				<stderr>${LOGS}/[$BAMFile,1].indexBam.err</stderr>
+			</streams>
+		</indexBamTask>
+
+		<!-- run peak detection using GEM -->
+		<GEMTask id="8" processBlock="pInput" executor="cluster" name="GEM">
+			<dependencies>
+				<depends separate="true">7</depends>
+			</dependencies>
+			<parameter>
+				<jarPath>${GEM_JAR}</jarPath>
+				<expt>{$BAMFile}</expt>
+				<!-- <control></control> TODO: add control samples if available -->
+				<format>BAM</format>
+				<readDistribution>${GEM_READ_DISTRIBUTION}</readDistribution>
+				<gpsOnly>true</gpsOnly>
+				<outputPrefix>${GEM_KEEP}/[$BAMFile,1]</outputPrefix>
+				<threads>${MAX_THREADS}</threads>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[$BAMFile,1].GEM.out</stdout>
+				<stderr>${LOGS}/[$BAMFile,1].GEM.err</stderr>
+			</streams>
+		</GEMTask>
+
+		<!-- get a list of all *.bed peak files -->
+		<listFilesTask id="9" executor="localHost" name="listFiles">
+			<dependencies>
+				<depends>8</depends>
+			</dependencies>
+			<parameter>
+				<folder>${GEM_KEEP}</folder>
+				<pattern>${BED_PATTERN}</pattern>
+				<maxdepth>2</maxdepth>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/findBedFiles.out</stdout>
+				<stderr>${LOGS}/findBedFiles.err</stderr>
+			</streams>
+		</listFilesTask>
+
+		<!-- create some basic plots and annotate the peaks -->
+		<ChIPSeekerTask id="10" processBlock="pInput" executor="cluster" name="ChIPSeeker">
+			<dependencies>
+				<depends>9</depends>
+			</dependencies>
+			<parameter>
+				<bedFiles>{$foundFiles}</bedFiles>
+				<annoDb>${ANNO_DB}</annoDb>
+				<txdb>${TXDB_DB}</txdb>
+				<outputDir>${PLOTS_KEEP}</outputDir>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/ChIPSeeker.out</stdout>
+				<stderr>${LOGS}/ChIPSeeker.err</stderr>
+			</streams>
+		</ChIPSeekerTask>
+
+		<!-- delete large tempory files -->
+		<deleteFolderTask id="11" executor="localHost" name="deleteTmpFolder">
+			<dependencies>
+				<depends>10</depends>
+			</dependencies>
+			<parameter>
+				<folder>${OUT_TMP}/</folder>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/deleteFolder.out</stdout>
+				<stderr>${LOGS}/deleteFolder.err</stderr>
+			</streams>
+		</deleteFolderTask>
+	</tasks>
+</watchdog>
