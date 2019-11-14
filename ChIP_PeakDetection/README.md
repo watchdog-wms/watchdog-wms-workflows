@@ -20,4 +20,3 @@ Required software:
 * GNU R
 * Python3
 * Java
-
