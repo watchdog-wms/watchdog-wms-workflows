@@ -58,9 +58,10 @@
 			<!--<sge name="cluster" environment="local" default="true" maxRunning="16" slots="1" memory="8192M" queue="TODO.q" />-->
 		</executors>
 		<processBlock>
-			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz" pattern="*_R[12].fastq.gz" />
-			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz_R1" pattern="*_R1.fastq.gz" />
-			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz_R2" pattern="*_R2.fastq.gz" />
+			<!-- TODO: attribute disableExistenceCheck can be removed -->
+			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz" pattern="*_R[12].fastq.gz" disableExistenceCheck="true"/>
+			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz_R1" pattern="*_R1.fastq.gz" disableExistenceCheck="true"/>
+			<processFolder folder="${FASTQ_FOLDER}" name="fastq_gz_R2" pattern="*_R2.fastq.gz" disableExistenceCheck="true"/>
 			<processInput name="pInput" />
 		</processBlock>
 	</settings>
