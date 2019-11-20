@@ -13,9 +13,10 @@
 	<executors>
 		<local name="localHost" default="true"/>
 		<!-- TODO: replace by cluster or remote executor with name hisat_executor if you don't want to run HISAT2 on your local computer-->
-		<local name="hisat_executor"/>
+		<!-- TODO: change pathToJava if Java installed somewhere else than /usr/bin/java, required for slave mode used in task actions-->
+		<local name="hisat_executor" pathToJava="/usr/bin/java"/>
 		<!-- example with SLURM cluster executor-->
-		<!--<slurm name="hisat_executor" memory="1G" cluster="serial" partition="serial_mpp2" cpu="16" timelimit="1-0:00" environment="local"/>-->
+		<!--<slurm name="hisat_executor" memory="1G" cluster="serial" partition="serial_mpp2" cpu="16" timelimit="1-0:00" environment="local" pathToJava="/usr/bin/java"/>-->
 		
 		<!-- TODO: replace by cluster or remote executor with name sra_executor if you don't want to run fastq_dump on your local computer-->
 		<local name="sra_executor" />
@@ -36,7 +37,7 @@
 		</environment>
 	</environments>
 </settings>
-<!-- TODO: replace your email delete the email attribute. For email configuration see manual-->
+<!-- TODO: replace your email or delete the email attribute. For email configuration see manual-->
 <tasks mail="mail@testmail.com">
 	<!-- downloads HISAT2 index first, if already available in the file system, skip tasks 1 and 2 using the -start 3 option of the Watchdog command-line tool-->
 	<wgetTask id="1" name="get HISAT2 index" version="1" maxRunning="1" environment="local">
@@ -112,6 +113,8 @@
 			<sam>${WORKING_DIR}/HISAT2/{$run_accession}.sam</sam>
 			<bam>${WORKING_DIR}/HISAT2/{$experiment_name}.bam</bam>
 			<threads>4</threads>
+			<!-- TODO: change temporary directory for samtools-->
+			<tmpFolder>${WORKING_DIR}</tmpFolder>
 		</parameter>
 		<streams>
 			<stdout>${WORKING_DIR}/HISAT2/.{$run_accession}.sam2bam.out</stdout>
