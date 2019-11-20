@@ -36,6 +36,8 @@ matrix:
     - stage: stage2 
       name: 'XML validation test'
       env: TEST_NAME='XML_VALIDATION'
+    - name: 'README existence test'
+      env: TEST_NAME='README_EXISTENCE'
     - stage: stage3
       name: 'virus scan test'
       script: /bin/bash "${WATCHDOG_BASE}/helper_scripts/travisCI_clamAV.sh"
