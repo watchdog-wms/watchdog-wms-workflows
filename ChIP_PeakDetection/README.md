@@ -17,6 +17,7 @@ Required software:
 * bwa (http://bio-bwa.sourceforge.net)
 * GEM (https://groups.csail.mit.edu/cgs/gem/)
 * ChIPseeker (https://www.bioconductor.org/packages/release/bioc/html/ChIPseeker.html)
+* samtools (https://www.htslib.org)
 * GNU R
 * Python3
 * Java
