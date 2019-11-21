@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  workflow that can be used to analyse the RNA-seq example dataset with Watchdog -->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
+	<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: release candidate 1.1 (1060r) -->
+	<!-- define settings that are valid within the complete workflow -->
+	<settings>
+		<!-- constants that are replaced with $\{CONSTANT_NAME\} -->
+		<constants>
+			<!-- TODO: set correct path watchdog -->
+			<const name="INSTALL">/home/to/watchdog</const>
+			<!-- these constants must not be changed for processing the example dataset -->
+			<!-- TODO: modify them if you want to apply the workflow to another dataset -->
+			<const name="BASE">${INSTALL}examples/test_data/complex</const>
+			<const name="BED">${BASE}/external_data/annotation/Homo_sapiens.GRCh38.78.chr21.bed</const>
+			<const name="GENE_TYPE">${BASE}/external_data/annotation/geneType.txt</const>
+			<const name="GENOME">${BASE}/external_data/genome/</const>
+			<const name="GTF">${BASE}/external_data/annotation/Ensembl_Homo_sapiens.GRCh38.78.chr21.gtf</const>
+			<const name="INDEX">${BASE}/external_data/genome/chr21.fa</const>
+			<const name="SAMPLE_ANNO">${BASE}/sample_condition.txt</const>
+			<const name="CONTROL_COND">WT</const>
+			<const name="TEST_COND">KO</const>
+			<const name="ANNO_SYMBOL">E75</const>
+
+			<!-- TODO: set correct path to BWA binary -->
+			<const name="BWA">/path/to/todo/bwa</const>
+			<!-- TODO: set correct path to contextMap jar -->
+			<const name="CONTEXTMAP_JAR">/path/to/todo/ContextMap.jar</const>
+			<!-- TODO: you can adjust the output folder, if you want to -->
+			<const name="OUTPUT">${INSTALL}examples/workflow_output/workflow2</const>
+		</constants>
+		<!-- executors with different resource requirements; TODO: adjust that on your environment -->
+		<executors>
+			<sge name="cluster mapping" environment="local copy" maxRunning="8" slots="16" memory="2G" queue="TODO.q" color="0xffa500ff" />
+			<sge name="cluster normal" environment="local copy" slots="1" default="true" queue="TODO.q" memory="1G"/>
+			<local name="local host" maxRunning="4" color="0x0cff09ff" />
+		</executors>
+		<processBlock>
+			<!-- TODO: attribute disableExistenceCheck can be removed -->
+			<processFolder name="fastq gz" folder="${BASE}/FASTQ/gz/" pattern="*.fastq.gz" color="0xfe0207ff" disableExistenceCheck="true"/>
+			<!-- return process folder -->
+			<processInput name="input block" color="0x1e93f4ff" />
+		</processBlock>
+		<environments>
+			<!-- instruct watchdog to copy all environment variables that are set on the local system -->
+			<environment name="local copy" copyLocalValue="true" useExternalExport="true" exportCommand="export {$NAME}=&amp;quot;{$VALUE}&amp;quot;" color="0xc45052ff" />
+		</environments>
+	</settings>
+	<!-- start with the actual workflow defenition -->
+	<!-- TODO: replace your email delete the email attribute. For email configuration see manual -->
+	<tasks mail="mail@testmail.com">
+		<!-- extract the fastq-files -->
+		<gzipTask id="1" name="extract" processBlock="fastq gz" posX="1" posY="1">
+			<parameter>
+				<decompress>true</decompress>
+				<delete>false</delete>
+				<input>{}</input> <!-- use the absolute path to the file as input -->
+				<output>${OUTPUT}/FASTQ/[1]</output> <!-- remove the last ending of the filename -->
+				<verify>true</verify>
+			</parameter>
+			<!-- save standard output and error -->
+			<streams>
+				<stderr>${OUTPUT}/FASTQ/[1].err</stderr> <!-- replace ${OUTPUT} with the constant defined above -->
+				<stdout>${OUTPUT}/FASTQ/[1].out</stdout>
+			</streams>
+		</gzipTask>
+		<!-- create fastQC reports for the raw data -->
+		<fastQCTask id="2" name="fastqc" processBlock="input block" posX="3" posY="1">
+			<dependencies>
+				<depends separate="true">1</depends>
+			</dependencies>
+			<parameter>
+				<fastq>{$createdGzipFile}</fastq> <!-- use the return variable 'createdGzipFile' as input file -->
+				<outdir>${OUTPUT}/fastqc/</outdir>
+				<threads>16</threads>
+			</parameter>
+			<streams>
+				<stderr>{$createdGzipFile}.err</stderr>
+				<stdout>{$createdGzipFile}.out</stdout>
+			</streams>
+		</fastQCTask>
+		<!-- run contextmap and notify the user on the status of every subtask-->
+		<contextMapTask id="3" name="contextmap" executor="cluster mapping" processBlock="input block" notify="subtask"  posX="5" posY="1">
+			<dependencies>
+				<!-- wait until fastQC reports are finished -->
+				<depends separate="true">2</depends>
+				<depends separate="true">1</depends>
+			</dependencies>
+			<parameter>
+				<alignerBin>${BWA}</alignerBin>
+				<alignerName>bwa</alignerName>
+				<genome>${GENOME}</genome>
+				<gtf>${GTF}</gtf>
+				<indices>${INDEX}</indices>
+				<jarPath>${CONTEXTMAP_JAR}</jarPath>
+				<keeptmp>false</keeptmp>
+				<localTmpFolder>/usr/local/storage/</localTmpFolder>
+				<mining>false</mining>
+				<noclipping>false</noclipping>
+				<noncanonicaljunctions>false</noncanonicaljunctions>
+				<output>${OUTPUT}/ContextMap/</output>
+				<pairedend>false</pairedend>
+				<polyA>true</polyA>
+				<reads>{$createdGzipFile}</reads>
+				<seed>25</seed>
+				<sequenceDB>false</sequenceDB>
+				<splitseedmismatches>0</splitseedmismatches>
+				<splitseedsizes>20</splitseedsizes>
+				<strandspecific>false</strandspecific>
+				<threads>16</threads>
+				<verbose>false</verbose>
+			</parameter>
+			<streams>
+				<stderr>${OUTPUT}/ContextMap/[$createdGzipFile,1,.].err</stderr>
+				<stdout>${OUTPUT}/ContextMap/[$createdGzipFile,1,.].out</stdout>
+			</streams>
+		</contextMapTask>
+		<!-- convert sam to bam -->
+		<sam2bamTask id="4" name="sam2bam" processBlock="input block" posX="7" posY="1">
+			<dependencies>
+				<depends separate="true">3</depends>
+			</dependencies>
+			<parameter>
+				<bam>{$contextMapSAMFile,1,.}.bam</bam>
+				<sam>{$contextMapSAMFile}</sam>
+				<threads>16</threads>
+			</parameter>
+		</sam2bamTask>
+		<!-- index the bam file -->
+		<indexBamTask id="5" name="indexBam" processBlock="input block" posX="1" posY="4">
+			<dependencies>
+				<depends separate="true">4</depends>
+			</dependencies>
+			<parameter>
+				<bam>{$BAMFile}</bam>
+				<link>true</link>
+			</parameter>
+		</indexBamTask>
+		<!-- create the bam stats -->
+		<bamstatsTask id="6" name="create_stats" processBlock="input block" posX="3" posY="4">
+			<dependencies>
+				<depends separate="true">5</depends>
+			</dependencies>
+			<parameter>
+				<bam>{$BAMFile}</bam>
+				<clipping>false</clipping>
+				<count>false</count>
+				<deletion>false</deletion>
+				<disableAllDefault>true</disableAllDefault>
+				<distribution>false</distribution>
+				<duplication>false</duplication>
+				<flagstat>true</flagstat>
+				<fragmentSize>false</fragmentSize>
+				<gc>false</gc>
+				<idxstats>true</idxstats>
+				<inferExperiment>false</inferExperiment>
+				<insertSize>false</insertSize>
+				<insertion>false</insertion>
+				<junctionAnnotation>false</junctionAnnotation>
+				<junctionSaturation>false</junctionSaturation>
+				<nvc>false</nvc>
+				<outdir>${OUTPUT}/ContextMap/stats/</outdir>
+				<paired>false</paired>
+				<readLength>101</readLength>
+				<saturation>false</saturation>
+				<statistics>false</statistics>
+				<stranded>false</stranded>
+				<tin>false</tin>
+			</parameter>
+		</bamstatsTask>
+		<!-- count reads per gene using featureCounts -->
+		<featureCountsTask id="7" name="count I" processBlock="input block" posX="3" posY="8" version="2">
+			<dependencies>
+				<depends separate="true">5</depends>
+			</dependencies>
+			<parameter>
+				<annotation>${GTF}</annotation>
+				<annotationType>GTF</annotationType>
+				<countFragments>true</countFragments>
+				<detailedReadAssignments>false</detailedReadAssignments>
+				<disableGroupSummarization>false</disableGroupSummarization>
+				<input>{$BAMFile}</input>
+				<minReadOverlap>75</minReadOverlap>
+				<multiCountMetaFeatures>false</multiCountMetaFeatures>
+				<multiMapping>false</multiMapping>
+				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/[$BAMFile,1,.].PR1.counts</output>
+				<primary>true</primary>
+				<threads>16</threads>
+			</parameter>
+		</featureCountsTask>
+		<!-- create pseudo-replicate with a bit of variation -->
+		<featureCountsTask id="8" name="count II" processBlock="input block" posX="3" posY="6" version="2">
+			<dependencies>
+				<depends separate="true">5</depends>
+			</dependencies>
+			<parameter>
+				<annotation>${GTF}</annotation>
+				<annotationType>GTF</annotationType>
+				<countFragments>true</countFragments>
+				<detailedReadAssignments>false</detailedReadAssignments>
+				<disableGroupSummarization>false</disableGroupSummarization>
+				<input>{$BAMFile}</input>
+				<!-- get variation here by being less stringent -->
+				<minReadOverlap>1</minReadOverlap>
+				<multiCountMetaFeatures>true</multiCountMetaFeatures>
+				<multiMapping>false</multiMapping>
+				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/[$BAMFile,1,.].PR2.counts</output>
+				<primary>true</primary>
+				<threads>16</threads>
+			</parameter>
+		</featureCountsTask>
+		<!-- merge bam statistics -->
+		<mergeStatisticsTask id="9" name="bamstatsMerge" executor="local host" posX="5" posY="9">
+			<dependencies>
+				<depends>6</depends>
+				<depends>7</depends>
+				<depends>8</depends>
+			</dependencies>
+			<parameter>
+				<inputDir>${OUTPUT}/ContextMap/stats/</inputDir>
+				<outputDir>${OUTPUT}/stats/</outputDir>
+				<type>BamstatsMerger</type>
+			</parameter>
+		</mergeStatisticsTask>
+		<!-- merge the feature counts files -->
+		<mergeStatisticsTask id="10" name="merge fc" executor="local host" posX="5" posY="5">
+			<dependencies>
+				<depends>6</depends>
+				<depends>7</depends>
+				<depends>8</depends>
+			</dependencies>
+			<parameter>
+				<inputDir>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/</inputDir>
+				<outputDir>${OUTPUT}/stats/</outputDir>
+				<type>FeatureCounts</type>
+			</parameter>
+		</mergeStatisticsTask>
+		<!-- merge flagstats statistics -->
+		<mergeStatisticsTask id="11" name="mergeFlag" executor="local host" posX="5" posY="7">
+			<dependencies>
+				<depends>6</depends>
+				<depends>7</depends>
+				<depends>8</depends>
+			</dependencies>
+			<parameter>
+				<inputDir>${OUTPUT}/ContextMap/stats/</inputDir>
+				<outputDir>${OUTPUT}/stats/</outputDir>
+				<type>FlagstatMerger</type>
+			</parameter>
+		</mergeStatisticsTask>
+		<!-- merge FastQC statistics -->
+		<mergeStatisticsTask id="12" name="FastQC merge" executor="local host" posX="5" posY="3">
+			<dependencies>
+				<depends>6</depends>
+				<depends>7</depends>
+				<depends>8</depends>
+			</dependencies>
+			<parameter>
+				<inputDir>${OUTPUT}/fastqc/</inputDir>
+				<outputDir>${OUTPUT}/stats/</outputDir>
+				<type>FastQC</type>
+			</parameter>
+		</mergeStatisticsTask>
+		<!-- create bam contigt distribution plot -->
+		<bamContigtDistributionTask id="13" name="plotDist" processBlock="input block" executor="local host" posX="7" posY="9">
+			<dependencies>
+				<depends>9</depends>
+			</dependencies>
+			<parameter>
+				<bamMergedStats>{$mergedFile}</bamMergedStats>
+				<outputFile>${OUTPUT}/stats/bamContigtDistribution.pdf</outputFile>
+			</parameter>
+		</bamContigtDistributionTask>
+
+		<!-- merge the feature counts files -->
+		<mergeFeatureCountsTask id="14" name="merge fc" executor="local host" posX="7" posY="5">
+			<dependencies>
+				<depends>9</depends>
+				<depends>10</depends>
+				<depends>11</depends>
+				<depends>12</depends>
+			</dependencies>
+			<parameter>
+				<featureAnnotation>${GENE_TYPE}</featureAnnotation>
+				<featureAnnotationID>Geneid</featureAnnotationID>
+				<noPlotting>false</noPlotting>
+				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}.counts</output>
+				<prefixNames>false</prefixNames>
+				<searchFolder>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/</searchFolder>
+				<statsFolder>${OUTPUT}/stats/</statsFolder>
+			</parameter>
+		</mergeFeatureCountsTask>
+		<!-- detect differentially expressed genes using all four methods - KO vs. WT -->
+		<DETestTask id="15" name="DGE" posX="9" posY="5">
+			<dependencies>
+				<depends>14</depends>
+			</dependencies>
+			<parameter>
+				<method>DESeq2</method>
+				<controlCondition>${CONTROL_COND}</controlCondition>
+				<countFile>${OUTPUT}/featureCounts/${ANNO_SYMBOL}.counts</countFile>
+				<featureAnnotation>${GENE_TYPE}</featureAnnotation>
+				<featureAnnotationID>Geneid</featureAnnotationID>
+				<foldchangeCutoff>0.0</foldchangeCutoff>
+				<foldchangeCutoff>0.415</foldchangeCutoff>
+				<foldchangeCutoff>0.585</foldchangeCutoff>
+				<foldchangeCutoff>1.0</foldchangeCutoff>
+				<foldchangeCutoffNames>significant</foldchangeCutoffNames>
+				<foldchangeCutoffNames>0.33-fold</foldchangeCutoffNames>
+				<foldchangeCutoffNames>1.5-fold</foldchangeCutoffNames>
+				<foldchangeCutoffNames>2-fold</foldchangeCutoffNames>
+				<output>${OUTPUT}/DGE/</output>
+				<pValueCutoff>0.01</pValueCutoff>
+				<sampleAnnotation>${SAMPLE_ANNO}</sampleAnnotation>
+				<testCondition>${TEST_COND}</testCondition>
+			</parameter>
+		</DETestTask>
+	</tasks>
+</watchdog>
+
