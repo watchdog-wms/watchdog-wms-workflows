@@ -73,6 +73,7 @@
 				<decompress>true</decompress>
 				<input>{}</input>
 				<output>${FASTQ_TMP}/[1]</output>
+				<!-- TODO: remove this line once the workflow succeeds to process the whole dataset -->
 				<limitLines>100000</limitLines>
 			</parameter>
 			<streams>
