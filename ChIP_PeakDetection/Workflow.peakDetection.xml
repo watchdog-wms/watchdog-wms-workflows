@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2019-2020 Michael Kluge -->
+<!-- licensed as GPLv3 -->
 <watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/path/to/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
 	<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.1 (1728r) -->
 	<settings>

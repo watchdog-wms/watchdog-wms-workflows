@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2019-2020 Caroline C. Friedel -->
+<!-- licensed as GPLv3 -->
 <!-- TODO: replace Watchdog installation folder -->
 <watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
 
