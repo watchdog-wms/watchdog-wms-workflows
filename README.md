@@ -20,4 +20,5 @@ You should have received a copy of the GNU General Public License along with thi
 ### Notice
 
 Copyright (C) 2019-2020 Michael Kluge, Marie-Sophie Friedl, Caroline C. Friedel / LFE Bioinformatik LMU
+
 Copyright (C) 2019-2020 watchdog-wms community contributors
