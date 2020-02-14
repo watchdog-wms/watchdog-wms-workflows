@@ -1,0 +1,9 @@
+﻿# This is the list of people who have contributed to the watchdog-wms workflow repository.
+# Thanks for sharing your workflow with us!
+
+# Names should be appended to this file in that format:
+# Name and optionally an <email address>
+
+Michael Kluge <michael.kluge@bio.ifi.lmu.de>
+Caroline C. Friedel <caroline.friedel@bio.ifi.lmu.de>
+Marie-Sophie Friedl <>
