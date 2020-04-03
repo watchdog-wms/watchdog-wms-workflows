@@ -29,6 +29,8 @@
 			<const name="CONTEXTMAP_JAR">/path/to/todo/ContextMap.jar</const>
 			<!-- TODO: you can adjust the output folder, if you want to -->
 			<const name="OUTPUT">${INSTALL}examples/workflow_output/workflow2</const>
+			<!-- TODO: folder that is used to store temporary files -->
+			<const name="LOCAL_TMP_FOLDER">/tmp/</const>
 		</constants>
 		<!-- executors with different resource requirements; TODO: adjust that on your environment -->
 		<executors>
@@ -95,7 +97,7 @@
 				<indices>${INDEX}</indices>
 				<jarPath>${CONTEXTMAP_JAR}</jarPath>
 				<keeptmp>false</keeptmp>
-				<localTmpFolder>/usr/local/storage/</localTmpFolder>
+				<localTmpFolder>${LOCAL_TMP_FOLDER}</localTmpFolder>
 				<mining>false</mining>
 				<noclipping>false</noclipping>
 				<noncanonicaljunctions>false</noncanonicaljunctions>
