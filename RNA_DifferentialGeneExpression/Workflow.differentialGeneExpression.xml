@@ -97,7 +97,7 @@
 				<indices>${INDEX}</indices>
 				<jarPath>${CONTEXTMAP_JAR}</jarPath>
 				<keeptmp>false</keeptmp>
-				<localTmpFolder>/usr/local/storage/</localTmpFolder>
+				<localTmpFolder>${LOCAL_TMP_FOLDER}</localTmpFolder>
 				<mining>false</mining>
 				<noclipping>false</noclipping>
 				<noncanonicaljunctions>false</noncanonicaljunctions>
@@ -112,7 +112,6 @@
 				<strandspecific>false</strandspecific>
 				<threads>16</threads>
 				<verbose>false</verbose>
-				<localTmpFolder>${LOCAL_TMP_FOLDER}</localTmpFolder>
 			</parameter>
 			<streams>
 				<stderr>${OUTPUT}/ContextMap/[$createdGzipFile,1,.].err</stderr>
