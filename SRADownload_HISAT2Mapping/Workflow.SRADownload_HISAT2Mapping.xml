@@ -102,8 +102,8 @@
 			<threads>8</threads>
 		</parameter>
 		<streams>
-		<stderr>${WORKING_DIR}/HISAT2/.hisat2_[$readFile1,1,_].sam.err</stderr>
-		<stdout>${WORKING_DIR}/HISAT2/.hisat2_[$readFile1,1,_].sam.out</stdout>
+		<stderr>${WORKING_DIR}/HISAT2/.hisat2_[$readFile1,1,_].err</stderr>
+		<stdout>${WORKING_DIR}/HISAT2/.hisat2_[$readFile1,1,_].out</stdout>
 		</streams>
 	</HISAT2Task>
 
