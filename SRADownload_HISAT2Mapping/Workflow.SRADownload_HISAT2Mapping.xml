@@ -27,6 +27,7 @@
 	</executors>
 	<processBlock>
 		<processTable name="example_sra_input" table="${WF_PARENT}/SRA_sample_file.txt"/>
+		<processInput  name="input_block"/>
 	</processBlock>
 	<environments>
 		<environment name="local" copyLocalValue="true">
@@ -86,23 +87,23 @@
 	</fastqDumpTask>
 
 	<!-- run HISAT2 on all downloaded fastq files -->
-	<HISAT2Task id="4" name="HISAT2" version="1" environment="local" processBlock="example_sra_input" executor="hisat_executor" maxRunning="6">
+	<HISAT2Task id="4" name="HISAT2" version="1" environment="local" processBlock="input_block" executor="hisat_executor" maxRunning="6">
 		<dependencies>
 			<depends separate="true">3</depends>
 		</dependencies>
 		<parameter>
-			<!-- If HISAT2 is already available in the file system, replace index path below-->
+			<!-- If HISAT2 index is already available in the file system, replace index path below-->
 			<index>${WORKING_DIR}/hisat2_index/hg19/genome</index>
-			<output>${WORKING_DIR}/HISAT2/{$run_accession}.sam</output>
-			<paired1>${WORKING_DIR}/SRA/{$run_accession}_1.fastq</paired1>
-			<paired2>${WORKING_DIR}/SRA/{$run_accession}_2.fastq</paired2>
-			<!-- for unpaired sequencing data replace paired1 and paired2 elements by the following<!-->
-			<!--<unpaired>${WORKING_DIR}/SRA/{$run_accession}.fastq</unpaired>-->
+			<output>${WORKING_DIR}/HISAT2/[$readFile1,1,_].sam</output>
+			<paired1>{$readFile1}</paired1>
+			<paired2>{$readFile2}</paired2>
+			<!-- for unpaired sequencing data replace paired1 and paired2 elements by the following-->
+			<!--<unpaired>{$readFile1}</unpaired>-->
 			<threads>8</threads>
 		</parameter>
 		<streams>
-		<stderr>${WORKING_DIR}/HISAT2/.hisat2_{$run_accession}.err</stderr>
-		<stdout>${WORKING_DIR}/HISAT2/.hisat2_{$run_accession}.out</stdout>
+		<stderr>${WORKING_DIR}/HISAT2/.hisat2_[$readFile1,1,_].err</stderr>
+		<stdout>${WORKING_DIR}/HISAT2/.hisat2_[$readFile1,1,_].out</stdout>
 		</streams>
 	</HISAT2Task>
 

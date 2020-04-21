@@ -36,6 +36,15 @@ Example:
   
 More information on how to create a workflow can be found in the [documentation](https://rawgit.com/klugem/watchdog/master/documentation/Watchdog-manual.html).
    
+### General workflow design guidelines
+
+Try to design your workflow as reusable as possible. The following points can be used as guideline:
+
+1) Define constants and use them in the workflow to set paths or other important parameters (e.g. ${PATH2XYZ}).
+2) Define one or more base directories as constants and define all absolute paths in the workflow relative to them (e.g. ${BASEDIR}/test1/file1.fasta).
+3) Use process blocks and file patterns to process replicates (e.g. <processFolder ... pattern="*_R[12].fastq.gz" />) .
+4) Use {}/()/[] to reference the absolute path to/absolute path to the parent folder of/name of the input file for a subtask created via a processFolder process block.
+
 ### Automatic tests on pull requests
 
 Before a pull request can be merged with the master branch some Travis CI tests must succeed.
