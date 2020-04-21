@@ -1,7 +1,7 @@
 Workflow RNA_DifferentialGeneExpression
 ==================================
 
-Performs:
+##### Performs:
 * Task 1: Unzip FASTQ reads from *.fastq.gz files
 * Task 2: Assess FASTQ quality using FastQC
 * Task 3: Align reads using ContextMap in combination with bwa
@@ -14,7 +14,11 @@ Performs:
 * Task 15: Detect differentially expressed genes using DESeq2
 ---
 
-Required software:
+##### Docker:
+The workflow can be run in a Docker container in combination with the Conda package manager.
+In this case no additional software expect docker, podman or singularity is required.
+
+##### Required software:
 * FastQC (https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 * bwa (http://bio-bwa.sourceforge.net)
 * ContextMap (https://www.bio.ifi.lmu.de/software/contextmap/)

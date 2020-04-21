@@ -9,10 +9,10 @@
 		<!-- constants that are replaced with $\{CONSTANT_NAME\} -->
 		<constants>
 			<!-- TODO: set correct path watchdog -->
-			<const name="INSTALL">/home/to/watchdog</const>
+			<const name="INSTALL">/home/to/watchdog/</const>
 			<!-- these constants must not be changed for processing the example dataset -->
 			<!-- TODO: modify them if you want to apply the workflow to another dataset -->
-			<const name="BASE">${INSTALL}examples/test_data/complex</const>
+			<const name="BASE">${INSTALL}/examples/test_data/complex</const>
 			<const name="BED">${BASE}/external_data/annotation/Homo_sapiens.GRCh38.78.chr21.bed</const>
 			<const name="GENE_TYPE">${BASE}/external_data/annotation/geneType.txt</const>
 			<const name="GENOME">${BASE}/external_data/genome/</const>
@@ -23,17 +23,31 @@
 			<const name="TEST_COND">KO</const>
 			<const name="ANNO_SYMBOL">E75</const>
 
-			<!-- TODO: set correct path to BWA binary -->
+			<!-- TODO: make sure that bwa is in the PATH variable or set correct path to bwa binary -->
 			<const name="BWA">/path/to/todo/bwa</const>
-			<!-- TODO: set correct path to contextMap jar -->
-			<const name="CONTEXTMAP_JAR">/path/to/todo/ContextMap.jar</const>
 			<!-- TODO: you can adjust the output folder, if you want to -->
-			<const name="OUTPUT">${INSTALL}examples/workflow_output/workflow2</const>
+			<const name="OUTPUT">${INSTALL}/examples/workflow_output/workflow2</const>
 			<!-- TODO: folder that is used to store temporary files -->
 			<const name="LOCAL_TMP_FOLDER">/tmp/</const>
+			<!-- TODO: if docker and conda should be used: modify path2docker to point to docker/podman/singularity binary -->
+			<const name="DOCKER_BIN">/usr/bin/podman</const>
+			<!-- TODO: modify path to conda environments that will be mounted within the docker container -->
+			<const name="CONDA_ENV_PATH">/mnt/store/conda_watchdog_env/</const>
 		</constants>
+		<!-- TODO: remove comments if you want to use docker and conda -->
+		<!--<wrappers>
+			<docker name="docker" path2docker="${DOCKER_BIN}" image="conda/miniconda3">
+				<blacklist pattern="/usr/local/storage/" />
+				<blacklist pattern="/tmp/" />
+				<mount>
+					<host>${CONDA_ENV_PATH}</host>
+				</mount>
+			</docker>
+			<conda name="conda" path2conda="/usr/local/" path2environments="${CONDA_ENV_PATH}"/>
+		</wrappers>-->
 		<!-- executors with different resource requirements; TODO: adjust that on your environment -->
 		<executors>
+			<!-- TODO: add attributes 'container="docker" packageManagers="conda"' to executors if docker and conda should be used for execution --> 
 			<sge name="cluster mapping" environment="local copy" maxRunning="8" slots="16" memory="2G" queue="TODO.q" color="0xffa500ff" />
 			<sge name="cluster normal" environment="local copy" slots="1" default="true" queue="TODO.q" memory="1G"/>
 			<local name="local host" maxRunning="4" color="0x0cff09ff" />
@@ -90,12 +104,12 @@
 				<depends separate="true">1</depends>
 			</dependencies>
 			<parameter>
-				<alignerBin>${BWA}</alignerBin>
+				<!-- TODO: set path if bwa is not in PATH variable -->
+				<!--<alignerBin>${BWA}</alignerBin>-->
 				<alignerName>bwa</alignerName>
 				<genome>${GENOME}</genome>
 				<gtf>${GTF}</gtf>
 				<indices>${INDEX}</indices>
-				<jarPath>${CONTEXTMAP_JAR}</jarPath>
 				<keeptmp>false</keeptmp>
 				<localTmpFolder>${LOCAL_TMP_FOLDER}</localTmpFolder>
 				<mining>false</mining>
