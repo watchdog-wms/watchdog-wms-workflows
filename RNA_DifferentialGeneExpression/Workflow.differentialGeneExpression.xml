@@ -49,6 +49,7 @@
 		<!-- executors with different resource requirements; TODO: adjust that on your environment -->
 		<executors>
 			<!-- TODO: add attributes 'container="docker" packageManagers="conda"' to executors if docker and conda should be used for execution --> 
+			<!-- Please note that downloading and installing the required packages with conda may take a while when the conda environments are used for the first time. -->
 			<sge name="cluster mapping" environment="local copy" maxRunning="8" slots="16" memory="2G" queue="TODO.q" color="0xffa500ff" />
 			<sge name="cluster normal" environment="local copy" slots="1" default="true" queue="TODO.q" memory="1G"/>
 			<local name="local host" maxRunning="4" color="0x0cff09ff" />
