@@ -36,8 +36,7 @@
 			<!-- TODO: modify the path where conda environments will be stored by Watchdog; it will also be mounted within the docker container -->
 			<const name="CONDA_ENV_PATH">/mnt/store/conda_watchdog_env/</const>
 		</constants>
-		<!-- TODO: remove comments if you want to use docker and conda -->
-		<!--<wrappers>
+		<wrappers>
 			<docker name="docker" path2docker="${DOCKER_BIN}" image="${DOCKER_IMAGE}">
 				<blacklist pattern="/usr/local/storage/" />
 				<blacklist pattern="/tmp/" />
@@ -46,7 +45,7 @@
 				</mount>
 			</docker>
 			<conda name="conda" path2conda="/usr/local/" path2environments="${CONDA_ENV_PATH}"/>
-		</wrappers>-->
+		</wrappers>
 		<!-- executors with different resource requirements; TODO: adjust that on your environment -->
 		<executors>
 			<!-- TODO: add attributes 'container="docker" packageManagers="conda"' to executors if docker and conda should be used for execution --> 
