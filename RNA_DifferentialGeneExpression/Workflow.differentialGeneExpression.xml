@@ -31,12 +31,14 @@
 			<const name="LOCAL_TMP_FOLDER">/tmp/</const>
 			<!-- TODO: if docker and conda should be used: modify path2docker to point to docker/podman/singularity binary -->
 			<const name="DOCKER_BIN">/usr/bin/podman</const>
-			<!-- TODO: modify path to conda environments that will be mounted within the docker container -->
+			<!-- TODO: use docker://conda/miniconda3 if you use singularity -->
+			<const name="DOCKER_IMAGE">conda/miniconda3</const>
+			<!-- TODO: modify the path where conda environments will be stored by Watchdog; it will also be mounted within the docker container -->
 			<const name="CONDA_ENV_PATH">/mnt/store/conda_watchdog_env/</const>
 		</constants>
 		<!-- TODO: remove comments if you want to use docker and conda -->
 		<!--<wrappers>
-			<docker name="docker" path2docker="${DOCKER_BIN}" image="conda/miniconda3">
+			<docker name="docker" path2docker="${DOCKER_BIN}" image="${DOCKER_IMAGE}">
 				<blacklist pattern="/usr/local/storage/" />
 				<blacklist pattern="/tmp/" />
 				<mount>
@@ -89,7 +91,7 @@
 			<parameter>
 				<fastq>{$createdGzipFile}</fastq> <!-- use the return variable 'createdGzipFile' as input file -->
 				<outdir>${OUTPUT}/fastqc/</outdir>
-				<threads>16</threads>
+				<threads>4</threads>
 			</parameter>
 			<streams>
 				<stderr>{$createdGzipFile}.err</stderr>
@@ -124,7 +126,7 @@
 				<splitseedmismatches>0</splitseedmismatches>
 				<splitseedsizes>20</splitseedsizes>
 				<strandspecific>false</strandspecific>
-				<threads>16</threads>
+				<threads>4</threads>
 				<verbose>false</verbose>
 			</parameter>
 			<streams>
@@ -140,7 +142,7 @@
 			<parameter>
 				<bam>{$contextMapSAMFile,1,.}.bam</bam>
 				<sam>{$contextMapSAMFile}</sam>
-				<threads>16</threads>
+				<threads>4</threads>
 			</parameter>
 		</sam2bamTask>
 		<!-- index the bam file -->
@@ -202,7 +204,7 @@
 				<multiMapping>false</multiMapping>
 				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/[$BAMFile,1,.].PR1.counts</output>
 				<primary>true</primary>
-				<threads>16</threads>
+				<threads>4</threads>
 			</parameter>
 		</featureCountsTask>
 		<!-- create pseudo-replicate with a bit of variation -->
@@ -223,7 +225,7 @@
 				<multiMapping>false</multiMapping>
 				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/[$BAMFile,1,.].PR2.counts</output>
 				<primary>true</primary>
-				<threads>16</threads>
+				<threads>4</threads>
 			</parameter>
 		</featureCountsTask>
 		<!-- merge bam statistics -->
