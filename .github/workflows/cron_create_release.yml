@@ -15,28 +15,62 @@ jobs:
       - name: test for new commits since last release
         id: skipTest
         run: |
+          # get all tags
           cd "$GITHUB_WORKSPACE/master"
-          # check if there are some tags
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          TAGS=$(git tag | wc -l)
-          if [ $TAGS -gt 0 ]; then
-            git log $(git describe --tags --abbrev=0)..HEAD --oneline | cat
-            MESSAGE=$(git log $(git describe --always --tags --abbrev=0)..HEAD --oneline | cat)
-            LINES=$(echo $MESSAGE | grep -v '^\s*$' | wc -l)
-              # new commits since last tag found
-              if [ $LINES -gt 0 ]; then
-                # find last tag version
-                LASTV=$(git describe --tags --abbrev=0 | sed 's/^v//')
+          bash --version
+          # check if there are some tags at all
+          TAG_COUNT=$(git tag | wc -l)
+          if [ $TAG_COUNT -gt 0 ]; then
+            # get commit ids of commits between last release and the HEAD
+            LAST_TAG=$(git describe --tags --abbrev=0)
+            COMMITS=$(git log "${LAST_TAG}..HEAD" --oneline | cat)
+            NUMBER_OF_COMMITS=$(echo -e $COMMITS | grep -v '^\s*$' | wc -l)
+              
+              # test if there are new commits since last created tag
+              if [ $NUMBER_OF_COMMITS -gt 0 ]; then
+                # find the version of the last tag
+                LASTV=$(echo "$LAST_TAG" | sed 's/^v//')
                 LASTV=$((LASTV+1))
-                # prepare message
+                CHANGE=0
+   
+                # prepare relase message
                 MESSAGE="The following commits are part of this release:"$'\n'$'\n'"${MESSAGE}"
-                MESSAGE="${MESSAGE//'%'/'%25'}"
-                MESSAGE="${MESSAGE//$'\n'/'%0A'}"
-                MESSAGE="${MESSAGE//$'\r'/'%0D'}"
-                # set variables
-                echo "::set-output name=SKIP::0"
-                echo "::set-output name=MESSAGE::$MESSAGE"
-                echo "::set-output name=NEW_VERSION::$LASTV"
+
+                # loop over all commits
+                readarray -t COMMITS_ARRAY <<<"$COMMITS"
+                for L in "${COMMITS_ARRAY[@]}"; do
+                  ID=$(echo "$L" | cut -f 1 -d " ")
+                  CM=$(echo "$L" | cut -c 9-)
+
+                  # find base folders part of that commit that are affected
+                  FOLDERS=$(git diff-tree --no-commit-id --name-only -r "$ID" | grep -Po '^([^/]+/)' | sort | uniq)
+                  # exclude folders that are hidden
+                  FOLDERS_COUNT=$(echo -e "$FOLDERS" | grep -v '^\.'| grep -v '^\s*$' | wc -l)
+                  # test if only one base folder is affected
+                  if [ $FOLDERS_COUNT -eq 1 ]; then
+                    MESSAGE="${MESSAGE}"$'\n'"${ID} [${FOLDERS%/}] ${CM}"
+                  else
+                    MESSAGE="${MESSAGE}"$'\n'"${L}"
+                  fi
+                  # test if commit causes a new release
+                  if [ $FOLDERS_COUNT -ge 1 ]; then
+                    CHANGE=1
+                  fi
+                done
+
+                if [ $CHANGE -eq 1 ]; then
+                  # format text
+                  MESSAGE="${MESSAGE//'%'/'%25'}"
+                  MESSAGE="${MESSAGE//$'\n'/'%0A'}"
+                  MESSAGE="${MESSAGE//$'\r'/'%0D'}"
+                  # set variables
+                  echo "::set-output name=SKIP::0"
+                  echo "::set-output name=MESSAGE::$MESSAGE"
+                  echo "::set-output name=NEW_VERSION::$LASTV"
+                else
+                  echo "::set-output name=SKIP::1"
+                fi
               else
                 echo "::set-output name=SKIP::1"
               fi
@@ -50,7 +84,7 @@ jobs:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
           tag_name: 'v${{ steps.skipTest.outputs.NEW_VERSION }}'
-          release_name: 'watchdog-wms-workflows v${{ steps.skipTest.outputs.NEW_VERSION }}'
+          release_name: 'watchdog-wms-modules v${{ steps.skipTest.outputs.NEW_VERSION }}'
           body: '${{ steps.skipTest.outputs.MESSAGE }}'
           draft: false
           prerelease: false
