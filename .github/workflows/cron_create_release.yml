@@ -84,7 +84,7 @@ jobs:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
           tag_name: 'v${{ steps.skipTest.outputs.NEW_VERSION }}'
-          release_name: 'watchdog-wms-modules v${{ steps.skipTest.outputs.NEW_VERSION }}'
+          release_name: 'watchdog-wms-workflows v${{ steps.skipTest.outputs.NEW_VERSION }}'
           body: '${{ steps.skipTest.outputs.MESSAGE }}'
           draft: false
           prerelease: false
