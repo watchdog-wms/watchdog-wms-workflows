@@ -1,0 +1,56 @@
+name: cron release management
+'on':
+  schedule:
+    - cron: '45 23 * * 0'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout master
+        uses: klugem/actions_checkout@v2
+        with:
+          fetch-depth: "0"
+          ref: master
+          path: master
+      - name: test for new commits since last release
+        id: skipTest
+        run: |
+          cd "$GITHUB_WORKSPACE/master"
+          # check if there are some tags
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+          TAGS=$(git tag | wc -l)
+          if [ $TAGS -gt 0 ]; then
+            git log $(git describe --tags --abbrev=0)..HEAD --oneline | cat
+            MESSAGE=$(git log $(git describe --always --tags --abbrev=0)..HEAD --oneline | cat)
+            LINES=$(echo $MESSAGE | grep -v '^\s*$' | wc -l)
+              # new commits since last tag found
+              if [ $LINES -gt 0 ]; then
+                # find last tag version
+                LASTV=$(git describe --tags --abbrev=0 | sed 's/^v//')
+                LASTV=$((LASTV+1))
+                # prepare message
+                MESSAGE="The following commits are part of this release:"$'\n'$'\n'"${MESSAGE}"
+                MESSAGE="${MESSAGE//'%'/'%25'}"
+                MESSAGE="${MESSAGE//$'\n'/'%0A'}"
+                MESSAGE="${MESSAGE//$'\r'/'%0D'}"
+                # set variables
+                echo "::set-output name=SKIP::0"
+                echo "::set-output name=MESSAGE::$MESSAGE"
+                echo "::set-output name=NEW_VERSION::$LASTV"
+              else
+                echo "::set-output name=SKIP::1"
+              fi
+          else
+            echo "::set-output name=SKIP::1"
+          fi
+      - name: create new release
+        if: steps.skipTest.outputs.SKIP != 1
+        uses: klugem/create-release@v1.0.2
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+        with:
+          tag_name: 'v${{ steps.skipTest.outputs.NEW_VERSION }}'
+          release_name: 'watchdog-wms-workflows v${{ steps.skipTest.outputs.NEW_VERSION }}'
+          body: '${{ steps.skipTest.outputs.MESSAGE }}'
+          draft: false
+          prerelease: false
