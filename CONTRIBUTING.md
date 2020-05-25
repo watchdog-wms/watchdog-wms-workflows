@@ -44,6 +44,7 @@ Try to design your workflow as reusable as possible. The following points can be
 2) Define one or more base directories as constants and define all absolute paths in the workflow relative to them (e.g. ${BASEDIR}/test1/file1.fasta).
 3) Use process blocks and file patterns to process replicates (e.g. <processFolder ... pattern="*_R[12].fastq.gz" />) .
 4) Use {}/()/[] to reference the absolute path to/absolute path to the parent folder of/name of the input file for a subtask created via a processFolder process block.
+5) Removing dependencies after running a workflow may lead to inconsistencies in re-runs and thus should always be avoided. Adding additional dependencies after running a workflow does not constitute a problem. 
 
 ### Automatic tests on pull requests
 
