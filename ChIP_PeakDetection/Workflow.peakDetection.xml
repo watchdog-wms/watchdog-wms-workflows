@@ -16,6 +16,7 @@
 			<const name="BWA_RAW_TMP">${OUT_TMP}/bwa/</const>
 
 			<!-- subfolder for output folder for final results -->
+			<const name="FASTQC_KEEP">${OUT_KEEP}/fastqc/</const>
 			<const name="BWA_KEEP">${OUT_KEEP}/bwa/</const>
 			<const name="GEM_KEEP">${OUT_KEEP}/GEM/</const>
 			<const name="PLOTS_KEEP">${OUT_KEEP}/plots/</const>
@@ -83,51 +84,66 @@
 				<stderr>${LOGS}/[1,_].extract.err</stderr>
 			</streams>
 		</gzipTask>
-
-		<!-- align reads using bwa -->
-		<bwaAlnTask id="2" processBlock="fastq_gz_R1" executor="cluster" name="aln_bwa">
+		
+		<!-- create fastQC reports for the raw data -->
+		<fastQCTask id="2" name="fastqc" processBlock="pInput">
 			<dependencies>
 				<depends separate="true">1</depends>
 			</dependencies>
 			<parameter>
-				<inReads>${FASTQ_TMP}/[1]</inReads>
-				<bwaIndex>${BWA_INDEX}</bwaIndex>
-				<bwaPath>${BWA_PATH}</bwaPath>
-				<outSai>${BWA_RAW_TMP}/[2].sai</outSai>
-				<stopIfMoreThanBestHits>5</stopIfMoreThanBestHits>
+				<fastq>{$createdGzipFile}</fastq> <!-- use the return variable 'createdGzipFile' as input file -->
+				<outdir>${FASTQC_KEEP}</outdir>
 				<threads>${MAX_THREADS}</threads>
 			</parameter>
-			<streams>
-				<stdout>${LOGS}/[2].aln.out</stdout>
-				<stderr>${LOGS}/[2].aln.err</stderr>
+			<streams>${LOGS}/
+				<stderr>${LOGS}/[$createdGzipFile,1].fastqc.err</stderr>
+				<stdout>${LOGS}/[$createdGzipFile,1].fastqc.out</stdout>
 			</streams>
-		</bwaAlnTask>
-
+		</fastQCTask>
+		
 		<!-- align reads using bwa -->
-		<bwaAlnTask id="3" processBlock="fastq_gz_R2" executor="cluster" name="aln_bwa">
-			<dependencies>
-				<depends separate="true">1</depends>
-			</dependencies>
-			<parameter>
-				<inReads>${FASTQ_TMP}/[1]</inReads>
-				<bwaIndex>${BWA_INDEX}</bwaIndex>
-				<bwaPath>${BWA_PATH}</bwaPath>
-				<outSai>${BWA_RAW_TMP}/[2].sai</outSai>
-				<stopIfMoreThanBestHits>5</stopIfMoreThanBestHits>
-				<threads>${MAX_THREADS}</threads>
-			</parameter>
-			<streams>
-				<stdout>${LOGS}/[2].aln.out</stdout>
-				<stderr>${LOGS}/[2].aln.err</stderr>
-			</streams>
-		</bwaAlnTask>
-
-
-		<!-- pair reads -->
-		<bwaSampeTask id="4" processBlock="fastq_gz_R1" executor="cluster" name="sampe_bwa">
+		<bwaAlnTask id="3" processBlock="fastq_gz_R1" executor="cluster" name="aln_bwa">
 			<dependencies>
 				<depends separate="true">2</depends>
-				<depends separate="true" prefixName="[1]" sep="_">3</depends>
+			</dependencies>
+			<parameter>
+				<inReads>${FASTQ_TMP}/[1]</inReads>
+				<bwaIndex>${BWA_INDEX}</bwaIndex>
+				<bwaPath>${BWA_PATH}</bwaPath>
+				<outSai>${BWA_RAW_TMP}/[2].sai</outSai>
+				<stopIfMoreThanBestHits>5</stopIfMoreThanBestHits>
+				<threads>${MAX_THREADS}</threads>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[2].aln.out</stdout>
+				<stderr>${LOGS}/[2].aln.err</stderr>
+			</streams>
+		</bwaAlnTask>
+
+		<!-- align reads using bwa -->
+		<bwaAlnTask id="4" processBlock="fastq_gz_R2" executor="cluster" name="aln_bwa">
+			<dependencies>
+				<depends separate="true">2</depends>
+			</dependencies>
+			<parameter>
+				<inReads>${FASTQ_TMP}/[1]</inReads>
+				<bwaIndex>${BWA_INDEX}</bwaIndex>
+				<bwaPath>${BWA_PATH}</bwaPath>
+				<outSai>${BWA_RAW_TMP}/[2].sai</outSai>
+				<stopIfMoreThanBestHits>5</stopIfMoreThanBestHits>
+				<threads>${MAX_THREADS}</threads>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/[2].aln.out</stdout>
+				<stderr>${LOGS}/[2].aln.err</stderr>
+			</streams>
+		</bwaAlnTask>
+
+		<!-- pair reads -->
+		<bwaSampeTask id="5" processBlock="fastq_gz_R1" executor="cluster" name="sampe_bwa">
+			<dependencies>
+				<depends separate="true">3</depends>
+				<depends separate="true" prefixName="[1]" sep="_">4</depends>
 			</dependencies>
 			<parameter>
 				<bwaIndex>${BWA_INDEX}</bwaIndex>
@@ -145,9 +161,9 @@
 		</bwaSampeTask>
 
 		<!-- filter reads based on MAPQ quality and remove unpaired reads -->
-		<filterBwaSampeTask id="5" processBlock="pInput" executor="cluster" name="filter_bwa">
+		<filterBwaSampeTask id="6" processBlock="pInput" executor="cluster" name="filter_bwa">
 			<dependencies>
-				<depends separate="true">4</depends>
+				<depends separate="true">5</depends>
 			</dependencies>
 			<parameter>
 				<inSamBam>{$bwaPairedSamFile}</inSamBam>
@@ -164,9 +180,9 @@
 		</filterBwaSampeTask>
 
 		<!-- convert SAM to BAM format -->
-		<sam2bamTask id="6" name="sam2bam" processBlock="pInput" executor="cluster" maxRunning="6">
+		<sam2bamTask id="7" name="sam2bam" processBlock="pInput" executor="cluster" maxRunning="6">
 			<dependencies>
-				<depends separate="true">5</depends>
+				<depends separate="true">6</depends>
 			</dependencies>
 			<parameter>
 				<sam>{$filteredPairs}</sam>
@@ -180,9 +196,9 @@
 		</sam2bamTask>
 
 		<!-- index BAM format -->
-		<indexBamTask id="7" name="indexBam" processBlock="pInput" executor="cluster" maxRunning="6">
+		<indexBamTask id="8" name="indexBam" processBlock="pInput" executor="cluster" maxRunning="6">
 			<dependencies>
-				<depends separate="true">6</depends>
+				<depends separate="true">7</depends>
 			</dependencies>
 			<parameter>
 				<bam>{$BAMFile}</bam>
@@ -194,9 +210,9 @@
 		</indexBamTask>
 
 		<!-- run peak detection using GEM -->
-		<GEMTask id="8" processBlock="pInput" executor="cluster" name="GEM">
+		<GEMTask id="9" processBlock="pInput" executor="cluster" name="GEM">
 			<dependencies>
-				<depends separate="true">7</depends>
+				<depends separate="true">8</depends>
 			</dependencies>
 			<parameter>
 				<jarPath>${GEM_JAR}</jarPath>
@@ -215,9 +231,9 @@
 		</GEMTask>
 
 		<!-- get a list of all *.bed peak files -->
-		<listFilesTask id="9" executor="localHost" name="listFiles">
+		<listFilesTask id="10" executor="localHost" name="listFiles">
 			<dependencies>
-				<depends>8</depends>
+				<depends>9</depends>
 			</dependencies>
 			<parameter>
 				<folder>${GEM_KEEP}</folder>
@@ -231,9 +247,9 @@
 		</listFilesTask>
 
 		<!-- create some basic plots and annotate the peaks -->
-		<ChIPSeekerTask id="10" processBlock="pInput" executor="cluster" name="ChIPSeeker">
+		<ChIPSeekerTask id="11" processBlock="pInput" executor="cluster" name="ChIPSeeker">
 			<dependencies>
-				<depends>9</depends>
+				<depends>10</depends>
 			</dependencies>
 			<parameter>
 				<bedFiles>{$foundFiles}</bedFiles>
@@ -248,9 +264,9 @@
 		</ChIPSeekerTask>
 
 		<!-- delete large tempory files -->
-		<deleteFolderTask id="11" executor="localHost" name="deleteTmpFolder">
+		<deleteFolderTask id="12" executor="localHost" name="deleteTmpFolder">
 			<dependencies>
-				<depends>10</depends>
+				<depends>11</depends>
 			</dependencies>
 			<parameter>
 				<folder>${OUT_TMP}/</folder>
