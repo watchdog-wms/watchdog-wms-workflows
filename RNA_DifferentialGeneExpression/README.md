@@ -23,8 +23,8 @@ In this case no additional software expect docker, podman or singularity is requ
 * bwa (http://bio-bwa.sourceforge.net)
 * ContextMap (https://www.bio.ifi.lmu.de/software/contextmap/)
 * samtools (https://www.htslib.org)
-* RSeQC (https://rseqc.sourceforge.net)
-* featureCounts (https://subread.sourceforge.net)
+* RSeQC (http://rseqc.sourceforge.net)
+* featureCounts (http://subread.sourceforge.net)
 * DESeq2 (https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
 * GNU R
 * Python3
