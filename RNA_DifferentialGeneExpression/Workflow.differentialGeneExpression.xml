@@ -194,7 +194,7 @@
 				<detailedReadAssignments>false</detailedReadAssignments>
 				<disableGroupSummarization>false</disableGroupSummarization>
 				<input>{$BAMFile}</input>
-				<minReadOverlap>75</minReadOverlap>
+				<minOverlap>75</minOverlap>
 				<multiCountMetaFeatures>false</multiCountMetaFeatures>
 				<multiMapping>false</multiMapping>
 				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/[$BAMFile,1,.].PR1.counts</output>
@@ -215,7 +215,7 @@
 				<disableGroupSummarization>false</disableGroupSummarization>
 				<input>{$BAMFile}</input>
 				<!-- get variation here by being less stringent -->
-				<minReadOverlap>1</minReadOverlap>
+				<minOverlap>1</minOverlap>
 				<multiCountMetaFeatures>true</multiCountMetaFeatures>
 				<multiMapping>false</multiMapping>
 				<output>${OUTPUT}/featureCounts/${ANNO_SYMBOL}/[$BAMFile,1,.].PR2.counts</output>
