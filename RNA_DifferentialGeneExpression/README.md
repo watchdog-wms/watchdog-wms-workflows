@@ -17,6 +17,7 @@ Workflow RNA_DifferentialGeneExpression
 
 
 
+
 ##### Docker:
 The workflow can be run in a Docker container in combination with the Conda package manager.
 In this case no additional software expect docker, podman or singularity is required.
