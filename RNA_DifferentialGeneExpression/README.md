@@ -14,6 +14,7 @@ Workflow RNA_DifferentialGeneExpression
 * Task 15: Detect differentially expressed genes using DESeq2
 ---
 
+
 ##### Docker:
 The workflow can be run in a Docker container in combination with the Conda package manager.
 In this case no additional software expect docker, podman or singularity is required.
