@@ -1,0 +1,58 @@
+name: PR Checker
+on:
+  pull_request:
+jobs:
+  Validator:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: klugem/actions_checkout@v2
+    - name: set up JDK 11
+      uses: klugem/actions_setup-java@v1
+      with:
+        java-version: 11
+        java-package: jdk
+    - name: set env variables
+      run: |
+          echo "WATCHDOG_BASE=~/watchdog/" >> $GITHUB_ENV
+          echo "WATCHDOG_PR_CHECKER=~/watchdog/jars/workflowValidator.jar" >> $GITHUB_ENV
+          
+          # simulate these travis env variables
+          echo "TRAVIS_BUILD_DIR=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+          echo "TRAVIS_PULL_REQUEST_SHA=$GITHUB_SHA" >> $GITHUB_ENV
+          echo "TRAVIS_PULL_REQUEST_SLUG=$GITHUB_REPOSITORY" >> $GITHUB_ENV
+          echo "TRAVIS_BUILD_ID=1" >> $GITHUB_ENV
+          echo "TRAVIS_JOB_ID=1" >> $GITHUB_ENV
+          echo "TRAVIS_REPO_SLUG=$GITHUB_REPOSITORY" >> $GITHUB_ENV
+    - name: init workflow validator
+      run: |
+          git clone --depth=1 --branch master 'https://github.com/klugem/watchdog' "${WATCHDOG_BASE}"
+          git -C "${WATCHDOG_BASE}" rev-parse HEAD
+          ls "${WATCHDOG_PR_CHECKER}" > /dev/null 2>&1
+    - name: signed commit test
+      continue-on-error: true
+      run: java -jar "${WATCHDOG_PR_CHECKER}" -check "SIGNED_COMMIT"
+    - name: separate module test
+      continue-on-error: true
+      run: java -jar "${WATCHDOG_PR_CHECKER}" -check "SEPARATE_FOLDER"
+    - name: XML validation test
+      continue-on-error: true
+      run: java -jar "${WATCHDOG_PR_CHECKER}" -check "XML_VALIDATION"
+    - name: README existence test
+      continue-on-error: true
+      run: java -jar "${WATCHDOG_PR_CHECKER}" -check "README_EXISTENCE"
+     
+  Virus:
+    runs-on: ubuntu-latest
+    steps:
+    - name: caching
+      uses: actions/cache@v2
+      with:
+        path: /tmp/clamav_db
+        key: virus_db
+    - uses: klugem/actions_checkout@v2    
+    - name: 'obtain can script'
+      run: |
+           wget -qq -O "/tmp/travisCI_clamAV.sh" "https://raw.githubusercontent.com/klugem/watchdog/master/helper_scripts/travisCI_clamAV.sh"
+           chmod u+x "/tmp/travisCI_clamAV.sh"
+    - name: 'virus scan test'
+      run: /tmp/travisCI_clamAV.sh "$GITHUB_WORKSPACE"
