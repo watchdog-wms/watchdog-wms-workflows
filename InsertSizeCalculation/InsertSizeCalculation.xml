@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" isNotValidToXSD="true" watchdogBase="/path/to/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+  <settings>
+    <constants>
+	  <!-- TODO: directory to input bam files -->
+      <const name="INPUT_DIR">/path/to/bam/files/</const>
+	   <!-- TODO: directory to output bam files -->
+      <const name="OUTPUT_DIR">/path/to/outputdir/</const>
+      <!-- TODO: if docker and conda should be used: modify path2docker to point to docker/podman/singularity binary -->
+	  <const name="DOCKER_BIN">/usr/bin/podman</const>
+      <!-- TODO: use docker://conda/miniconda3 if you use singularity -->
+      <const name="DOCKER_IMAGE">conda/miniconda3</const>
+      <!-- TODO: modify the path where conda environments will be stored by Watchdog; it will also be mounted within the docker container -->
+      <const name="CONDA_ENV_PATH">/mnt/store/conda_watchdog_env/</const>
+    </constants>
+    <wrappers>
+      <conda name="conda" path2conda="/usr/local/bin/conda" path2environments="${CONDA_ENV_PATH}"/>
+      <docker name="docker" path2docker="${DOCKER_BIN}" image="${DOCKER_IMAGE}">
+		<mount><host>${CONDA_ENV_PATH}</host></mount>
+        <mount><host>${INPUT_DIR}</host></mount>
+        <mount><host>${OUTPUT_DIR}</host></mount>
+        <blacklist pattern="/tmp/"/>
+      </docker>
+    </wrappers>
+    <executors>
+        <!-- Please note that downloading and installing the required packages with conda may take a while when the conda environments are used for the first time. -->
+        <local name="localhost" default="true" maxRunning="2" container="docker" packageManagers="conda" />
+    </executors>
+    <processBlock>
+      <processFolder folder="${INPUT_DIR}" name="bam" pattern="*bam" disableExistenceCheck="true"/>
+    </processBlock>
+  </settings>
+  <!-- start with the actual workflow defenition -->
+  <!-- TODO: replace your email delete the email attribute. For email configuration see manual -->
+   <tasks mail="mail@testmail.com">
+		<!-- calculates insert size metrics for all bam files in input directory-->
+		<insertSizeMetricsTask id="1" name="insert" processBlock="bam" version="1">
+		<parameter>
+			<Histogram_FILE>${OUTPUT_DIR}/[1]_histo.pdf</Histogram_FILE>
+			<INPUT>{}</INPUT>
+			<OUTPUT>${OUTPUT_DIR}/[1]_inserts.txt</OUTPUT>
+			<VALIDATION_STRINGENCY>SILENT</VALIDATION_STRINGENCY>
+		</parameter>
+		<streams>
+			<stderr>${OUTPUT_DIR}/.[1].err</stderr>
+			<stdout>${OUTPUT_DIR}/.[1].out</stdout>
+		</streams>
+		</insertSizeMetricsTask>
+  </tasks>
+</watchdog>
