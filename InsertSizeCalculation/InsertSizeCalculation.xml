@@ -27,7 +27,7 @@
         <local name="localhost" default="true" maxRunning="2" container="docker" packageManagers="conda" />
     </executors>
     <processBlock>
-      <processFolder folder="${INPUT_DIR}" name="bam" pattern="*bam"/>
+      <processFolder folder="${INPUT_DIR}" name="bam" pattern="*bam" disableExistenceCheck="true"/>
     </processBlock>
   </settings>
   <!-- start with the actual workflow defenition -->
