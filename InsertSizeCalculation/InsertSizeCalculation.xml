@@ -3,9 +3,9 @@
   <settings>
     <constants>
 	  <!-- TODO: directory to input bam files -->
-      <const name="INPUT_DIR">/path/to/bam/files</const>
+      <const name="INPUT_DIR">/path/to/bam/files/</const>
 	   <!-- TODO: directory to output bam files -->
-      <const name="OUTPUT_DIR">/path/to/outputdire/</const>
+      <const name="OUTPUT_DIR">/path/to/outputdir/</const>
       <!-- TODO: if docker and conda should be used: modify path2docker to point to docker/podman/singularity binary -->
 	  <const name="DOCKER_BIN">/usr/bin/podman</const>
       <!-- TODO: use docker://conda/miniconda3 if you use singularity -->
