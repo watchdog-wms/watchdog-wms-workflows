@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2023 Elena Weiß -->
+<!-- licensed as GPLv3 -->
+<!-- TODO: change to your installation path of watchdog -->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/home/proj/software/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+	<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.1 (1728r) -->
+	<settings>
+		<modules>
+			<folder>modules/</folder>
+    		</modules>
+		<constants>
+			<!-- TODO: change path to desired output directory-->
+			<const name="outputDir">/path/to/output/folder/</const>
+			<const name="LOGS">${outputDir}logfiles</const>
+			<!-- TODO: change to your gtf file-->
+			<const name="gtf">/path/to/gtf/file</const>
+			<!-- TODO: change to strandness of experiment, either 0,1 or 2-->
+			<const name="strandness">2</const>
+			<!-- TODO: change to path of bam files-->
+			<const name="bamfolder">/path/to/directory/with/bamfiles/</const>
+			<const name="basename_input">pro_all</const>
+			<const name="bins">101</const>
+			<!-- TODO: change to name for test condition-->
+			<const name="test">WT</const>
+			<!-- TODO: change to name of control condition-->
+			<const name="control">mock</const>
+			<const name="sampleanno">${outputDir}/sampleanno.txt</const>
+			<const name="regs">${outputDir}/input/regs.bed</const>
+		</constants>
+		<environments>
+			<environment name="local" copyLocalValue="true" useExternalExport="true" exportCommand="export {$NAME}=&quot;{$VALUE}&quot;" color="0xc45052ff">
+				<var name="DISPLAY"></var>
+				<!-- TODO:change path to your installation of featureCounts -->
+				<var name="PATH" sep=":" update="true">/path/to/installation/of/featureCounts/bin/</var>
+				<!-- TODO: change path to R installation -->
+				<var name="PATH" update="true">/path/to/Rscript/</var>
+				<!-- TODO: change path to java installation -->
+				<var name="PATH" update="true">/path/to/java/</var>
+				<!-- TODO: change path to python installation -->
+				<var name="PATH" update="true">/path/to/pathon3/</var>
+			</environment>
+		</environments>
+		<executors>
+			<sge name="localHost" maxRunning="1"/>
+			<!-- TODO: replace with cluster if available -->
+			<sge name="cluster" maxRunning="2"/>
+			<!-- <sge name="cluster" slots="1" memory="5G" queue="TODO.q" maxRunning="15" environment="local"/> -->
+		</executors>
+		<processBlock>
+			<processInput name="pInput"/>
+			<processTable name="reg" table="${regs}"/>
+			<!-- TODO: change to the pattern of your bam files -->
+			<processFolder name="bamfiles" folder="${bamfolder}" pattern="*.bam$"/>
+		</processBlock>
+	</settings>
+
+	<!-- TODO: change to your email address-->
+	<tasks mail="mustermann@example.com">
+
+		<!-- compute AMSS for every input region-->
+		<amssTask environment="local" id="1" executor="cluster" name="AMSS" processBlock="reg">	
+			<parameter>
+				<inputregs>{$regs}</inputregs>
+				<out>${outputDir}/windows/</out>
+				<strandness>${strandness}</strandness>
+				<bams>${bamfolder}</bams>
+				<!-- TODO: change to the pattern of your bam files-->
+				<pattern>*.bam$</pattern>
+				<sampleAnnotation>${sampleanno}</sampleAnnotation>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/amss.{$regs}.out</stdout>
+				<stderr>${LOGS}/amss.{$regs}.err</stderr>
+			</streams>
+		</amssTask>
+
+		<!-- collects every final AMSS per input region into one file and creates annotation files-->
+		<preDexseqTask environment="local" id="2" executor="localHost" name="annot">	
+			<dependencies>
+                                <depends>1</depends>
+                        </dependencies>			
+			<parameter>
+				<annot>${outputDir}/annot/annotation_filled_up.gff</annot>
+				<annot_fc>${outputDir}/annot/annotation_fc_filled_up.gff</annot_fc>
+				<indir>${outputDir}/windows/</indir>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/collect.out</stdout>
+				<stderr>${LOGS}/collect.err</stderr>
+			</streams>
+		</preDexseqTask>
+
+		<!-- calls feature counts on bam files-->
+		<featureCountsTask id="3" executor="cluster" name="featurecounts" environment="local" processBlock="bamfiles">
+			<dependencies>
+                                <depends>2</depends>
+                        </dependencies>
+			<parameter>
+				<annotation>${outputDir}/annot/annotation_fc_filled_up.gff</annotation>
+				<input>{}</input>
+				<output>${outputDir}fpkm/[1].counts</output>
+				<!-- TODO: change to strandness of experiment, either 0,1 or 2-->
+				<stranded>2</stranded>
+				<countFragments>true</countFragments>
+				<featureType>exonic_part</featureType>
+				<multiMapping>true</multiMapping>
+				<groupType>htname</groupType>
+				<annotationType>GTF</annotationType>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/featurecounts.[].out</stdout>
+				<stderr>${LOGS}/featurecounts.[].err</stderr>
+			</streams>
+		</featureCountsTask>
+
+		<!-- merges feature counts files into one-->
+		<mergeFeatureCountsTask id="4" name="merge" executor="localHost">
+	  		<dependencies>
+        			<depends>3</depends>
+      			</dependencies>
+	  		<parameter>
+				<searchFolder>${outputDir}fpkm/</searchFolder>
+				<output>${outputDir}fpkm/merged_counts.txt</output>
+	  		</parameter>
+	  		<streams>
+        			<stdout>${LOGS}/mergeFeature.out</stdout>
+        			<stderr>${LOGS}/mergeFeature.err</stderr>
+      			</streams>
+		</mergeFeatureCountsTask>
+
+		<!-- calls DEXSeq with own annotation file-->
+		<DEXSeqTask id="5" name="dexseq" executor="localHost">
+			<dependencies>
+				<depends>4</depends>
+			</dependencies>
+			<parameter>
+				<countFile>${outputDir}/fpkm/merged_counts.txt</countFile>
+				<flattedGTFAnnotation>${outputDir}/annot/annotation_filled_up.gff</flattedGTFAnnotation>
+				<output>${outputDir}</output>
+				<sampleAnnotation>${sampleanno}</sampleAnnotation>
+				<testCondition>${test}</testCondition>
+				<controlCondition>${control}</controlCondition>
+			</parameter>
+			<streams>
+				<stderr>${LOGS}/DEXSeq.err</stderr>
+				<stdout>${LOGS}/DEXSeq.out</stdout>
+			</streams>
+		</DEXSeqTask>
+
+		<!-- collects AMSS and DEXSeq info and creates  output table with scores-->
+		<quantCurveScoreTask id="6" executor="localHost" name="score">
+			<dependencies>
+				<depends>5</depends>
+			</dependencies>			
+			<parameter>
+				<sampleAnnotation>${sampleanno}</sampleAnnotation>
+				<out>${outputDir}</out>
+				<testCondition>${test}</testCondition>
+				<controlCondition>${control}</controlCondition>
+			</parameter>
+			<streams>
+				<stdout>${LOGS}/scores.out</stdout>
+				<stderr>${LOGS}/scores.err</stderr>
+			</streams>
+		</quantCurveScoreTask>
+
+	</tasks>
+</watchdog>
