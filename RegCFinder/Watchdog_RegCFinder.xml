@@ -50,7 +50,7 @@
 			<processInput name="pInput"/>
 			<processTable name="reg" table="${regs}" disableExistenceCheck="true"/>
 			<!-- TODO: change to the pattern of your bam files -->
-			<processFolder name="bamfiles" folder="${bamfolder}" pattern="*.bam$"/>
+			<processFolder name="bamfiles" folder="${bamfolder}" pattern="*.bam$" disableExistenceCheck="true"/>
 		</processBlock>
 	</settings>
 
