@@ -1,4 +1,4 @@
-Workflow MSS_Detection
+RegCFinder workflow
 ==================================
 
 Performs:
@@ -16,3 +16,7 @@ Required software:
 * GNU R
 * Python3
 * Java
+
+--- 
+
+A small test example is provided at https://doi.org/10.5281/zenodo.7585027
