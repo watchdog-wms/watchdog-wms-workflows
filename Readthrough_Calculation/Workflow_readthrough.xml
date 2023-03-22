@@ -11,7 +11,7 @@
 		</constants>
 		<!-- TODO: replace file path-->
 		<processBlock>
-			<processTable name="files_all" table="/path/to/list_of_input_bam_files.txt"/>
+			<processTable name="files_all" table="/path/to/list_of_input_bam_files.txt" disableExistenceCheck="true"/>
 		</processBlock>
 		<executors>
 			<local name="localhost" maxRunning="4" default="true"/>
