@@ -14,7 +14,9 @@ Workflow Readthrough_Calculation
 * samtools (https://www.htslib.org)
 * Java
 
-##### Ouput
+---
+
+##### Output
 *samplename*_readinreadout.txt (tab-separated)
 
 Important columns:
