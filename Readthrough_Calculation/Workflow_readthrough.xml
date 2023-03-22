@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO: replace installation directory of Watchdog in watchdogBase-->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
+	   <settings>
+		<constants>
+			<!-- TODO: replace path -->
+			<const name="BASE">/path/to/output/dir/</const>
+			<!-- TODO: replace path -->
+			<const name="GTF">/path/to/annotation.gtf</const>
+			<const name="MIN_OVERLAP">25</const>
+		</constants>
+		<!-- TODO: replace file path-->
+		<processBlock>
+			<processTable name="files_all" table="/path/to/list_of_input_bam_files.txt"/>
+		</processBlock>
+		<executors>
+			<local name="localhost" maxRunning="4" default="true"/>
+	   </executors>
+	</settings>
+	<!-- TODO: replace email-->
+	<tasks mail="your@email.com">
+		<featureCountsTask id="1" name="featureCounts" processBlock="files_all">
+			<parameter>
+					<annotation>${GTF}</annotation>
+					<input>{$BAM}</input>
+					<output>${BASE}/featureCounts/[$BAM,1].counts</output>
+					<threads>16</threads>
+					<countFragments>true</countFragments>
+					<primary>true</primary>
+					<minReadOverlap>25</minReadOverlap>
+					<stranded>2</stranded>
+					<multiMapping>true</multiMapping>
+			</parameter>
+			<streams>
+					<stdout>${BASE}/featureCounts/.[$BAM,1].featureCounts.out</stdout>
+					<stderr>${BASE}/featureCounts/.[$BAM,1].featureCounts.err</stderr>
+			</streams>
+		</featureCountsTask>
+		
+		<bamstatsTask id="2" name="bamstats" processBlock="files_all">
+			<parameter>
+				<bam>{$BAM}</bam>
+				<outdir>${BASE}/stats/bamstats/</outdir>
+				<readLength>101</readLength>
+				<disableAllDefault>true</disableAllDefault>
+				<idxstats>true</idxstats>
+				<flagstat>true</flagstat>
+             </parameter>
+			<streams>
+				<stdout>${BASE}/stats/.[$BAM,1].bamstats.out</stdout>
+				<stderr>${BASE}/stats/.[$BAM,1].bamstats.err</stderr>
+			</streams>
+         </bamstatsTask>
+		 
+		<mergeStatisticsTask id="3" name="mergeStatistics">
+			<dependencies>
+				<depends>2</depends>
+			</dependencies>
+			<parameter>
+				<type>BamstatsMerger</type>
+				<inputDir>${BASE}/stats/bamstats/</inputDir>
+				<outputDir>${BASE}/stats/</outputDir>
+			</parameter>
+			<streams>
+				<stdout>${BASE}/stats/.BamstatsMerger.out</stdout>
+				<stderr>${BASE}/stats/.BamstatsMerger.err</stderr>
+			</streams>
+         </mergeStatisticsTask>
+		 
+		<readthroughTask id="4" name="readthrough calculation" processBlock="files_all">
+			<dependencies>
+					<depends separate="true">1</depends>
+					<depends>3</depends>
+			</dependencies>
+			<parameter>
+				<annotation>${GTF}</annotation>
+				<genecounts>${BASE}/featureCounts/[$BAM,1].counts</genecounts>
+				<input>{$BAM}</input>
+				<output>${BASE}/Readthrough/[$BAM,1]_readinreadout.txt</output>
+				<strandedness>2</strandedness>
+				<idxstats>${BASE}/stats/Idxstats.txt</idxstats>
+				<exclude>chrHsv1_s17,chrRDNA</exclude>
+				<excludeType>pseudogene</excludeType>
+				<normFactor>2E9</normFactor>
+				<readthroughLength>5000</readthroughLength>
+				<readinLength>5000</readinLength>
+			</parameter>
+			<streams>
+                <stdout>${BASE}/Readthrough/.[$BAM,1]_readthrough.out</stdout>
+                <stderr>${BASE}/Readthrough/.[$BAM,1]_readthrough.err</stderr>
+            </streams>
+		</readthroughTask>
+	</tasks>
+</watchdog>

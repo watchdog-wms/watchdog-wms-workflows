@@ -1,0 +1,4 @@
+BAM
+/path/to/Sample1_Rep1.bam
+/path/to/Sample2_Rep2.bam
+
