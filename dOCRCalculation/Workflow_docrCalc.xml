@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO adjust path to Watchdog installation directory-->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/home/proj/software/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
+	<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.4 (1809r) -->
+	<settings>
+		<constants>
+			<!-- input files-->
+			<!-- TODO: adjust paths to annotation and input files-->
+			<const name="ANNOTATION">/path/to/workflow/directory/annotation/Homo_sapiens.GRCh37.87.chr_genetype.txt</const>
+			<!-- TODO change path to directory containing BAM files -->
+			<!-- BAM files for ATAC-seq data for mock and HSV-1 strain 17 infection and infection with null mutants of HSV-1 can be downloaded from https://doi.org/10.5281/zenodo.7766550-->
+			<const name="BAM_DIR">/path/to/bamdirectory></const>
+			
+			<!--paths to software-->
+			<!--TODO: adjust paths-->
+			<const name="PATH_FSEQ">/path/to/fseq.jar</const>
+			<const name="PATH_PICARD">/path/to/picard/installation/directory/</const>
+			<const name="PATH_BEDTOOLS">/path/to/bedtools/installation/directory</const>
+			
+			<!-- path to output files-->
+			<!--TODO: adjust path to base output directory-->
+			<const name="BASE">/mnt/raidtmp/friedel/dOCRs_test</const>
+			<const name="FSEQ_OUT">${BASE}/BED</const>
+			<const name="DOCRS_OUT">${BASE}/dOCRs/</const>
+			<const name="STATS_OUT">${BASE}/stats/</const>
+			<const name="BASE_DOWNSAMPLED">${BASE}/downsampled</const>
+			<const name="FSEQ_OUT_DOWN">${BASE_DOWNSAMPLED}/BED</const>
+			<const name="DOCRS_OUT_DOWN">${BASE_DOWNSAMPLED}/dOCRs/</const>
+			<const name="DOWN_BAM">${BASE}/downsampledBams/</const>
+			<const name="SAMPLE_FILE">${BASE}/downSampleFactors.txt</const>
+			
+			<!-- samples to be included in downsampling-->
+			<!--TODO: adjust-->
+			<const name="SAMPLES">Mock_1,WT_1</const>
+			
+			<const name="DIST_3PRIME_END">10000</const>
+			<const name="DIST_LAST_OCR">5000</const>
+		</constants>
+		<environments>
+			<environment copyLocalValue="true" exportCommand="export {$NAME}=&quot;{$VALUE}&quot;" name="local" useExternalExport="true">
+				<var name="PATH" sep=":" update="true">${PATH_BEDTOOLS}</var>
+			</environment>
+		</environments>
+		<processBlock>
+			<processFolder name="bamAtac" folder="${BAM_DIR}" pattern="*.bam" disableExistenceCheck="true"/>
+			<processFolder name="beds" folder="${FSEQ_OUT}/" pattern="*_combined*.bed" disableExistenceCheck="true"/>
+			<processTable name="sampleTable" table="${SAMPLE_FILE}" disableExistenceCheck="true"/>
+			<processFolder name="downsampledBams" folder="${DOWN_BAM}" pattern="*.bam" disableExistenceCheck="true"/>
+			<processFolder name="downsampledBeds" folder="${FSEQ_OUT_DOWN}/" pattern="*_combined*.bed" disableExistenceCheck="true"/>
+		</processBlock>
+		<executors>
+			<local name="local" maxRunning="2" environment="local" default="true"/>
+		</executors>
+	</settings>
+	<!-- TODO: adjust email address -->
+	<tasks mail="mail@address.com">
+		<fseqTask id="1" name="fseq" processBlock="bamAtac" environment="local">
+			<parameter>
+				<bam>{}</bam>
+				<name>[1]</name>
+				<dir>${BASE}</dir>
+				<pathToFseq>${PATH_FSEQ}</pathToFseq>
+				<mergeDist>0</mergeDist>
+			</parameter>
+			<streams>
+				<stdout>${FSEQ_OUT}/.[1].fseq.out</stdout>
+				<stderr>${FSEQ_OUT}/.[1].fseq.err</stderr>
+			</streams>
+		</fseqTask>
+		
+		<calcDOCRsTask id="2" name="calcdocr" processBlock="beds" environment="local">
+			<dependencies>
+				<depends>1</depends>
+			</dependencies>
+			<parameter>
+				<input>{}</input>
+				<output>${DOCRS_OUT}</output>
+				<name>[1,_]</name>
+				<d1>${DIST_3PRIME_END}</d1>
+				<d2>${DIST_LAST_OCR}</d2>
+				<annotation>${ANNOTATION}</annotation>
+			</parameter>
+			<streams>
+				<stdout>${DOCRS_OUT}/.[1,_].calcDocr.out</stdout>
+				<stderr>${DOCRS_OUT}/.[1,_].calcDocr.err</stderr>
+			</streams>
+		</calcDOCRsTask>
+		
+		<bamstatsTask id="3" name="bamstats" processBlock="bamAtac">
+			<parameter>
+				<bam>{}</bam>
+				<outdir>${STATS_OUT}/bamstats/</outdir>
+				<readLength>101</readLength>
+				<disableAllDefault>true</disableAllDefault>
+				<idxstats>true</idxstats>
+				<flagstat>true</flagstat>
+			</parameter>
+			<streams>
+				<stdout>${STATS_OUT}/.[1].bamstats.out</stdout>
+				<stderr>${STATS_OUT}/.[1].bamstats.err</stderr>
+			</streams>
+         </bamstatsTask>
+		 
+		<mergeStatisticsTask id="4" name="mergeStatistics">
+			<dependencies>
+				<depends>3</depends>
+			</dependencies>
+			<parameter>
+				<type>BamstatsMerger</type>
+				<inputDir>${STATS_OUT}/bamstats/</inputDir>
+				<outputDir>${STATS_OUT}</outputDir>
+			</parameter>
+			<streams>
+				<stdout>${STATS_OUT}/.BamstatsMerger.out</stdout>
+				<stderr>${STATS_OUT}/.BamstatsMerger.err</stderr>
+			</streams>
+         </mergeStatisticsTask>
+	
+		<calcDownsampleRateTask id="5" name="calcRate" environment="local">
+			<dependencies>
+				<depends>4</depends>
+			</dependencies>	
+			<parameter>
+				<idxstats>${STATS_OUT}/Idxstats.txt</idxstats>
+				<output>${SAMPLE_FILE}</output>
+				<exclude>chrHsv1_s17</exclude>
+				<samples>${SAMPLES}</samples>
+			</parameter>
+			<streams>
+				<stdout>${BASE}/.calcDownsampleRate.out</stdout>
+				<stderr>${BASE}/.calcDownsampleRate.err</stderr>
+			</streams>
+		</calcDownsampleRateTask>
+	
+		<downsampleSamTask id="6" name="sampleBam" processBlock="sampleTable" environment="local">
+			<dependencies>
+				<depends>5</depends>
+			</dependencies>
+			<parameter>
+				<input>${BAM_DIR}/{$sample}.bam</input>
+				<output>${DOWN_BAM}/{$sample}.bam</output>
+				<probability>{$factor}</probability>
+				<pathToPicard>${PATH_PICARD}</pathToPicard>
+			</parameter>
+			<streams>
+				<stdout>${DOWN_BAM}/.{$sample}_downsampleSam.out</stdout>
+				<stderr>${DOWN_BAM}/.{$sample}_downsampleSam.err</stderr>
+			</streams>
+		</downsampleSamTask>
+	
+		<indexBamTask id="7" name ="indexBam" processBlock="downsampledBams" environment="local">
+			<dependencies>
+				<depends>6</depends>
+			</dependencies>
+			<parameter>
+				<bam>{}</bam>
+				<link>true</link>
+			</parameter>
+		</indexBamTask>
+		
+		<fseqTask id="8" name="fseq downsampled" processBlock="downsampledBams" environment="local">
+			<dependencies>
+				<depends>7</depends>
+			</dependencies>
+			<parameter>	
+				<bam>{}</bam>
+				<name>[1]</name>
+				<dir>${BASE_DOWNSAMPLED}</dir>
+				<pathToFseq>${PATH_FSEQ}</pathToFseq>
+			</parameter>
+			<streams>
+				<stdout>${FSEQ_OUT_DOWN}/.[1].fseq.out</stdout>
+				<stderr>${FSEQ_OUT_DOWN}/.[1].fseq.err</stderr>
+			</streams>
+		</fseqTask>
+		
+		<calcDOCRsTask id="9" name="calcdocr downsampled" processBlock="downsampledBeds" environment="local">
+			<dependencies>
+				<depends>8</depends>
+			</dependencies>
+			<parameter>
+				<input>{}</input>
+				<output>${DOCRS_OUT_DOWN}</output>
+				<name>[1,_]</name>
+				<d1>${DIST_3PRIME_END}</d1>
+				<d2>${DIST_LAST_OCR}</d2>
+				<annotation>${ANNOTATION}</annotation>
+				</parameter>
+			<streams>
+				<stdout>${DOCRS_OUT_DOWN}/.[1,_].calcDocr.out</stdout>
+				<stderr>${DOCRS_OUT_DOWN}/.[1,_].calcDocr.err</stderr>
+			</streams>
+		</calcDOCRsTask>
+  </tasks>
+</watchdog>
