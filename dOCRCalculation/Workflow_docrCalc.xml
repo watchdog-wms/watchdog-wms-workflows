@@ -9,17 +9,17 @@
 			<const name="ANNOTATION">/path/to/workflow/directory/annotation/Homo_sapiens.GRCh37.87.chr_genetype.txt</const>
 			<!-- TODO change path to directory containing BAM files -->
 			<!-- BAM files for ATAC-seq data for mock and HSV-1 strain 17 infection and infection with null mutants of HSV-1 can be downloaded from https://doi.org/10.5281/zenodo.7766550-->
-			<const name="BAM_DIR">/path/to/bamdirectory></const>
+			<const name="BAM_DIR">/path/to/bamdirectory/</const>
 			
 			<!--paths to software-->
 			<!--TODO: adjust paths-->
 			<const name="PATH_FSEQ">/path/to/fseq.jar</const>
 			<const name="PATH_PICARD">/path/to/picard/installation/directory/</const>
-			<const name="PATH_BEDTOOLS">/path/to/bedtools/installation/directory</const>
+			<const name="PATH_BEDTOOLS">/path/to/bedtools/installation/directory/</const>
 			
 			<!-- path to output files-->
 			<!--TODO: adjust path to base output directory-->
-			<const name="BASE">/mnt/raidtmp/friedel/dOCRs_test</const>
+			<const name="BASE">/path/to/dOCRs_out</const>
 			<const name="FSEQ_OUT">${BASE}/BED</const>
 			<const name="DOCRS_OUT">${BASE}/dOCRs/</const>
 			<const name="STATS_OUT">${BASE}/stats/</const>
