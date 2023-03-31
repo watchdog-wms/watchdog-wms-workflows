@@ -1,71 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (C) 2023 Elena Weiß -->
 <!-- licensed as GPLv3 -->
-<!-- TODO: change to your installation path of watchdog -->
-<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/home/proj/software/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
-	<!-- Created by WorkflowDesigner of Watchdog v. Watchdog - version: 2.0.1 (1728r) -->
+<!-- TODO: change installation path of watchdog -->
+<watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" watchdogBase="/path/to/watchdog/" xsi:noNamespaceSchemaLocation="watchdog.xsd">
 	<settings>
-		<modules>
-			<folder>modules/</folder>
-    		</modules>
 		<constants>
-			<!-- TODO: change path to desired output directory-->
-			<const name="outputDir">/path/to/output/folder/</const>
-			<const name="LOGS">${outputDir}logfiles</const>
+			<!-- input data-->
+			<!-- TODO: change to path to input directory containing BAM files, sample annotation and target windows-->
+			<const name="inputDir">/path/to/example_input/</const>
+			<const name="bamfolder">${inputDir}/bamfiles/</const>
+			<const name="sampleanno">${inputDir}/sampleanno.txt</const>
+			<const name="regs">${inputDir}/regs.bed</const>
+			<!-- output -->
+			<!-- TODO: change path to output directory-->
+			<const name="outputDir">/path/to/example_output/</const>
+			<const name="LOGS">${outputDir}/logfiles</const>
+			<!-- global parameters -->
 			<!-- TODO: change to strandness of experiment, either 0,1 or 2-->
 			<const name="strandness">2</const>
-			<!-- TODO: change to path of bam files, including indexed .bai files-->
-			<const name="bamfolder">/path/to/directory/with/bamfiles/</const>
 			<!-- TODO: change to name for test condition-->
 			<const name="test">WT</const>
 			<!-- TODO: change to name of control condition-->
 			<const name="control">mock</const>
-			<const name="sampleanno">${outputDir}/sampleanno.txt</const>
-			<const name="regs">${outputDir}/input/regs.bed</const>
+			<const name="pseudocount">1</const>
+			<const name="numrandomizations">1000</const>
+			<!--TODO: change the path to the directory in which you want to store the conda environments for the individual tasks -->
+			<const name="CONDA_ENV_PATH">/path/to/conda_watchdog_env/</const>
 		</constants>
-		<environments>
-			<environment name="local" copyLocalValue="true" useExternalExport="true" exportCommand="export {$NAME}=&quot;{$VALUE}&quot;" color="0xc45052ff">
-				<var name="DISPLAY"></var>
-				<!-- TODO:change path to your installation of featureCounts -->
-				<var name="PATH" sep=":" update="true">/path/to/installation/of/featureCounts/bin/</var>
-				<!-- TODO: change path to R installation -->
-				<var name="PATH" update="true">/path/to/Rscript/</var>
-				<!-- TODO: change path to java installation -->
-				<var name="PATH" update="true">/path/to/java/</var>
-				<!-- TODO: change path to python installation -->
-				<var name="PATH" update="true">/path/to/pathon3/</var>
-			</environment>
-		</environments>
+		<wrappers>
+			<!-- TODO: change path to conda-->
+			<!-- Please note that downloading and installing the required packages with conda may take a while when running the workflow the first time. -->
+			<conda name="conda" path2conda="/path/to/bin/conda" path2environments="${CONDA_ENV_PATH}"/>
+		</wrappers>
 		<executors>
-			<local name="localHost" maxRunning="1"/>
+			<local name="localHost" maxRunning="1" packageManagers="conda" default="true"/>
 			<!-- TODO: replace with cluster if available -->
-			<local name="cluster" maxRunning="2"/>
-			<!-- <sge name="cluster" slots="1" memory="5G" queue="TODO.q" maxRunning="15" environment="local"/> -->
+			<!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#execution_environments for details on different executors-->
+			<!--<sge name="cluster" slots="1" memory="5G" queue="TODO.q" maxRunning="15" />-->
 		</executors>
 		<processBlock>
-			<processInput name="pInput"/>
 			<processTable name="reg" table="${regs}" disableExistenceCheck="true"/>
-			<!-- TODO: change to the pattern of your bam files -->
+			<!-- TODO: if necessary change pattern for your bam files -->
 			<processFolder name="bamfiles" folder="${bamfolder}" pattern="*.bam$" disableExistenceCheck="true"/>
 		</processBlock>
 	</settings>
 
 	<!-- TODO: change to your email address-->
+	<!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#mail_server for details regarding email configuration-->
 	<tasks mail="mustermann@example.com">
 
 		<!-- compute AMSS for every input region-->
-		<amssTask environment="local" id="1" executor="cluster" name="AMSS" processBlock="reg">	
+		<amssTask id="1" name="AMSS" processBlock="reg">	
 			<parameter>
 				<inputregs>{$regs}</inputregs>
 				<out>${outputDir}/windows/</out>
 				<strandness>${strandness}</strandness>
 				<bams>${bamfolder}</bams>
-				<!-- TODO: change if wanted -->
-				<pseudocount>1</pseudocount>
-				<!-- TODO: change if wanted -->
-				<numrandomizations>1000</numrandomizations>
-				<!-- TODO: change to the pattern of your bam files-->
-				<pattern>*.bam$</pattern>
+				<!-- TODO: if necessary change pattern for your bam files-->
+				<pattern>.bam$</pattern>
+				<pseudocount>${pseudocount}</pseudocount>
+				<numrandomizations>${numrandomizations}</numrandomizations>
 				<sampleAnnotation>${sampleanno}</sampleAnnotation>
 			</parameter>
 			<streams>
@@ -75,7 +69,7 @@
 		</amssTask>
 
 		<!-- collects every final AMSS per input region into one file and creates annotation files-->
-		<preDexseqTask environment="local" id="2" executor="localHost" name="annot">	
+		<preDexseqTask id="2" name="annot">	
 			<dependencies>
 				<depends>1</depends>
 			</dependencies>			
@@ -91,15 +85,15 @@
 		</preDexseqTask>
 
 		<!-- calls feature counts on bam files-->
-		<featureCountsTask id="3" executor="cluster" name="featurecounts" environment="local" processBlock="bamfiles">
+		<featureCountsTask id="3" name="featurecounts" processBlock="bamfiles">
 			<dependencies>
 				<depends>2</depends>
 			</dependencies>
 			<parameter>
 				<annotation>${outputDir}/annot/annotation_fc_filled_up.gff</annotation>
 				<input>{}</input>
-				<output>${outputDir}fpkm/[1].counts</output>
-				<!-- TODO: change to strandness of experiment, either 0,1 or 2-->
+				<output>${outputDir}/counts/[1].counts</output>
+				<!-- TODO: change to strandness of experiment, either 0, 1 or 2-->
 				<stranded>2</stranded>
 				<countFragments>true</countFragments>
 				<featureType>exonic_part</featureType>
@@ -114,13 +108,13 @@
 		</featureCountsTask>
 
 		<!-- merges feature counts files into one-->
-		<mergeFeatureCountsTask id="4" name="merge" executor="localHost">
+		<mergeFeatureCountsTask id="4" name="merge">
 	  		<dependencies>
 				<depends>3</depends>
 			</dependencies>
 	  		<parameter>
-				<searchFolder>${outputDir}fpkm/</searchFolder>
-				<output>${outputDir}fpkm/merged_counts.txt</output>
+				<searchFolder>${outputDir}/counts/</searchFolder>
+				<output>${outputDir}/counts/merged_counts.txt</output>
 	  		</parameter>
 	  		<streams>
 				<stdout>${LOGS}/mergeFeature.out</stdout>
@@ -129,12 +123,12 @@
 		</mergeFeatureCountsTask>
 
 		<!-- calls DEXSeq with own annotation file-->
-		<DEXSeqTask id="5" name="dexseq" executor="localHost">
+		<DEXSeqTask id="5" name="dexseq">
 			<dependencies>
 				<depends>4</depends>
 			</dependencies>
 			<parameter>
-				<countFile>${outputDir}/fpkm/merged_counts.txt</countFile>
+				<countFile>${outputDir}/counts/merged_counts.txt</countFile>
 				<flattedGTFAnnotation>${outputDir}/annot/annotation_filled_up.gff</flattedGTFAnnotation>
 				<output>${outputDir}</output>
 				<sampleAnnotation>${sampleanno}</sampleAnnotation>
@@ -148,7 +142,7 @@
 		</DEXSeqTask>
 
 		<!-- collects AMSS and DEXSeq info and creates  output table with scores-->
-		<quantCurveScoreTask id="6" executor="localHost" name="score">
+		<quantCurveScoreTask id="6" name="score">
 			<dependencies>
 				<depends>5</depends>
 			</dependencies>			
