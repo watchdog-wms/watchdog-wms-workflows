@@ -1,4 +1,4 @@
-Workflow MSS_Detection
+RegCFinder workflow
 ==================================
 
 Performs:
