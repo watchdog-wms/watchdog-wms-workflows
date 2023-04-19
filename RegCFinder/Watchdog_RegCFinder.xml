@@ -85,7 +85,7 @@
 		</preDexseqTask>
 
 		<!-- calls feature counts on bam files-->
-		<featureCountsTask id="3" name="featurecounts" processBlock="bamfiles">
+		<featureCountsTask id="3" name="featurecounts" version="2" processBlock="bamfiles">
 			<dependencies>
 				<depends>2</depends>
 			</dependencies>
