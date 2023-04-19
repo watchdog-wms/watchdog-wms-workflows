@@ -36,7 +36,7 @@
 			<local name="localHost" maxRunning="1" packageManagers="conda" default="true"/>
 			<!-- TODO: replace with cluster if available -->
 			<!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#execution_environments for details on different executors-->
-			<!--<sge name="cluster" slots="1" memory="5G" queue="TODO.q" maxRunning="15" />-->
+			<!--<sge name="cluster" slots="1" memory="5G" queue="TODO.q" packageManagers="conda" maxRunning="15" />-->
 		</executors>
 		<processBlock>
 			<processTable name="reg" table="${regs}" disableExistenceCheck="true"/>
@@ -45,7 +45,7 @@
 		</processBlock>
 	</settings>
 
-	<!-- TODO: change to your email address-->
+	<!-- TODO: change to your email address or remove mail attribute -->
 	<!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#mail_server for details regarding email configuration-->
 	<tasks mail="mustermann@example.com">
 
