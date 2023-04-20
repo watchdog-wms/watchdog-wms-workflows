@@ -24,7 +24,7 @@ How to use RegCFinder:
 * Download the workflow xml file from https://raw.githubusercontent.com/watchdog-wms/watchdog-wms-workflows/master/RegCFinder/Watchdog_RegCFinder.xml
 * Example input files can be downloaded from: https://doi.org/10.5281/zenodo.7585027
 * Adapt the workflow xml file (= Watchdog_RegCFinder.xml) using a text or XML editor. All places in the xml file that have to be adjusted are marked with a TODO comment above the relevant line. 
-* To run the example provided at Zenodo, you only have to adjust the installation paths for Watchdog and Conda and the paths to the input and output directory and the directory in which you want so store conda environments for individual tasks.
+* To run the example provided at Zenodo, you only have to adjust the installation paths for Watchdog and Conda and the paths to the input and output directory and the directory in which you want to store conda environments for individual tasks.
 * To receive email updates about your tasks, change your email address in the tasks element. If you do not want to get email updates or configure email use, just remove mail="mustermann@example.com". In this case, a link for progress monitoring will be printed to standard out.
 * In addition, you can adjust the following parts of the workflow for your own input data:
    * Within the constants block, you can adapt strandness of your experiment, state control and test condition names, and adjust pseudocount and numrandomizations for the amss task. 
