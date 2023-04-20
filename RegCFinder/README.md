@@ -13,9 +13,9 @@ Performs:
 Required software:
 * Java (for running Watchdog, JDK 11 or higher, https://www.oracle.com/java/technologies/downloads/)
 * Watchdog (https://www.bio.ifi.lmu.de/software/watchdog/, see below for further installation instructions)
-* Conda, e.g. miniconda (https://docs.conda.io/en/latest/miniconda.html)
-* All other required software is automatically loaded using conda during the workflow run. This may take some time during the first run or if you delete the conda environments between runs. 
-* RegCFinder has been tested on Linux (SUSE, Release 15.4) and MacOS (Big Sur).
+* Conda, e.g. miniforge (https://github.com/conda-forge/miniforge)
+* All other required software is automatically loaded using conda during the workflow run. This takes some time when you run the RegCFinder workflow for the first time or if you delete the conda environments between runs.
+* RegCFinder has been tested on Linux (SUSE, Release 15.4) with miniforge and miniconda and MacOS (Big Sur) with miniforge.
 
 ---
 
