@@ -3,271 +3,268 @@
 <!-- TODO: change installation path of watchdog -->
 <watchdog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="watchdog.xsd" watchdogBase="/path/to/watchdog/">
 <settings>
-    <constants>
-        <!--  TODO: change BASE directory name, where results and log files are stored -->
-        <const name="BASE">/path/to/base/directory/</const>
-        <const name="OUTPUT">${BASE}/results/</const>
-        <const name="LOGS">${BASE}/logs/</const>
-        <!--  TODO: change file paths to input files -->
-        <const name="REFERENCE">/path/to/reference_genome.fa</const>
-        <const name="REFERENCE_SNPS">/path/to/reference_snps.txt</const>
-        <const name="CONFIG">/path/to/config_strain.txt</const>
-        <const name="GTF">/path/to/annotation.gtf</const>
-        <const name="samples">/path/to/input/samples.txt</const>
-        <const name="replicates">/path/to/input/replicates.txt</const>
-        <!--  TODO: change the path to the directory in which you want to store the conda environments for the individual tasks -->
-        <const name="CONDA_ENV_PATH">/path/to/conda_watchdog_env/</const>
-        <!--  TODO: change the path to the jar file for VarScan -->
-        <const name="VARSCAN_JAR">/path/to/VarScan.jar</const>
-    </constants>
-    <wrappers>
-        <!-- TODO: change path to conda-->
-        <!-- Please note that downloading and installing the required packages with conda may take a while when running the workflow the first time. -->
-        <conda name="conda" path2conda="/path/to/bin/conda" path2environments="${CONDA_ENV_PATH}"/>
-    </wrappers>
-    <executors>
-        <local name="localHost" maxRunning="1" packageManagers="conda" default="true"/>
-        <!-- TODO: replace with cluster if available -->
-        <!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#execution_environments for details on different executors-->
-        <!--<sge name="cluster" slots="1" memory="5G" queue="TODO.q" packageManagers="conda" maxRunning="15" />-->
-    </executors>
-    <processBlock>
-        <processTable name="samples" table="${samples}" disableExistenceCheck="true" />
-        <processTable name="replicates" table="${replicates}" disableExistenceCheck="true" />
-    </processBlock>
+	<constants>
+		<!--  TODO: change BASE directory name, where results and log files are stored -->
+		<const name="BASE">/path/to/base/directory</const>
+		<const name="OUTPUT">${BASE}/results</const>
+		<const name="LOGS">${BASE}/logs/</const>
+		<!--  TODO: change file paths to input files -->
+		<const name="REFERENCE">/path/to/reference_genome.fa</const>
+		<const name="REFERENCE_SNPS">/path/to/reference_snps.txt</const>
+		<const name="CONFIG">/path/to/config_strain.txt</const>
+		<const name="GTF">/path/to/annotation.gtf</const>
+		<const name="samples">/path/to/input/samples.txt</const>
+		<const name="replicates">/path/to/input/replicates.txt</const>
+		<!--  TODO: change the path to the directory in which you want to store the conda environments for the individual tasks -->
+		<const name="CONDA_ENV_PATH">/path/to/conda_watchdog_env</const>
+	</constants>
+	<wrappers>
+		<!-- TODO: change path to conda-->
+		<!-- Please note that downloading and installing the required packages with conda may take a while when running the workflow the first time. -->
+		<conda name="conda" path2conda="/path/to/bin/conda" path2environments="${CONDA_ENV_PATH}"/>
+	</wrappers>
+	<executors>
+		<local name="localHost" maxRunning="1" packageManagers="conda" default="true"/>
+		<!-- TODO: replace with cluster if available -->
+		<!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#execution_environments for details on different executors-->
+		<!--<sge name="cluster" slots="1" memory="5G" queue="TODO.q" packageManagers="conda" maxRunning="15" />-->
+	</executors>
+	<processBlock>
+		<processTable name="samples" table="${samples}" disableExistenceCheck="true" />
+		<processTable name="replicates" table="${replicates}" disableExistenceCheck="true" />
+	</processBlock>
 </settings>
 
 <!-- TODO: change to your email address or remove mail attribute -->
 <!-- see https://klugem.github.io/watchdog/Watchdog-manual.html#mail_server for details regarding email configuration-->
 <tasks mail="mustermann@example.com">
 
-    <!-- Call SNPs with bcftools -->
-    <bcftoolsVariantCallingTask id="1" name="bcftools" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <parameter>
-            <reference>${REFERENCE}</reference>
-            <bamfile>{$BAM}</bamfile>
-            <vcf>${OUTPUT}/bcftools/[$BAM,1].vcf</vcf>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/bcftools/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/bcftools/.[$BAM,1].out</stdout>
-        </streams>
-    </bcftoolsVariantCallingTask> 
+	<!-- Call SNPs with bcftools -->
+	<bcftoolsVariantCallingTask id="1" name="bcftools" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<parameter>
+			<reference>${REFERENCE}</reference>
+			<bamfile>{$BAM}</bamfile>
+			<vcf>${OUTPUT}/bcftools/{$SAMPLE}/[$BAM,1].vcf</vcf>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/bcftools/{$SAMPLE}/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/bcftools/{$SAMPLE}/.[$BAM,1].out</stdout>
+		</streams>
+	</bcftoolsVariantCallingTask> 
 
-    <!-- Call SNPs with Varscan -->
-    <varScanMpileupTask id="2" name="varscan" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <parameter>
-            <infile>{$BAM}</infile>
-            <jar>${VARSCAN_JAR}</jar>
-            <output>${OUTPUT}/varscan/[$BAM,1].vcf</output>
-            <reference>${REFERENCE}</reference>
-            <method>mpileup2snp</method>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/varscan/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/varscan/.[$BAM,1].out</stdout>
-        </streams>
-    </varScanMpileupTask>
+	<!-- Call SNPs with Varscan -->
+	<varScanMpileupTask id="2" name="varscan" version="1" processBlock="replicates" notify="enabled" executor="localHost">
+		<parameter>
+			<infile>{$BAM}</infile>
+			<output>${OUTPUT}/varscan/{$SAMPLE}/[$BAM,1].vcf</output>
+			<reference>${REFERENCE}</reference>
+			<method>mpileup2snp</method>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/varscan/{$SAMPLE}/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/varscan/{$SAMPLE}/.[$BAM,1].out</stdout>
+		</streams>
+	</varScanMpileupTask>
 
-    <!-- Get intersection of SNPs called by bcftools and Varscan over all replicates of the sample. These are the consistent SNPs -->
-    <consistentSNPsTask id="3" name="computeConsistentSNPs" version="1" processBlock="samples" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends>1</depends>
-            <depends>2</depends>
-        </dependencies>
-        <parameter>
-            <!-- TODO: add as many replicates as the sample with the most replicates consists of. Comma-separate them. -->
-            <bcftool_rep>${OUTPUT}/bcftools/[$BAM_1,1].vcf,${OUTPUT}/bcftools/[$BAM_2,1].vcf</bcftool_rep>
-            <varscan_rep>${OUTPUT}/varscan/[$BAM_1,1].vcf,${OUTPUT}/varscan/[$BAM_2,1].vcf</varscan_rep>
-            <output>${OUTPUT}/consistent/consistentSNPs_{$SAMPLE}.txt</output>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/consistent/.{$SAMPLE}.err</stderr>
-            <stdout>${LOGS}/consistent/.{$SAMPLE}.out</stdout>
-        </streams>
-    </consistentSNPsTask>
+	<!-- Get intersection of SNPs called by bcftools and Varscan over all replicates of the sample. These are the consistent SNPs -->
+	<consistentSNPsTask id="3" name="computeConsistentSNPs" version="1" processBlock="samples" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends>1</depends>
+			<depends>2</depends>
+		</dependencies>
+		<parameter>
+			<!-- TODO: add as many replicates as the sample with the most replicates consists of. Comma-separate them. -->
+			<bcftool_rep>${OUTPUT}/bcftools/{$SAMPLE}/[$BAM_1,1].vcf,${OUTPUT}/bcftools/{$SAMPLE}/[$BAM_2,1].vcf</bcftool_rep>
+			<varscan_rep>${OUTPUT}/varscan/{$SAMPLE}/[$BAM_1,1].vcf,${OUTPUT}/varscan/{$SAMPLE}/[$BAM_2,1].vcf</varscan_rep>
+			<output>${OUTPUT}/consistent/consistentSNPs_{$SAMPLE}.txt</output>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/consistent/.{$SAMPLE}.err</stderr>
+			<stdout>${LOGS}/consistent/.{$SAMPLE}.out</stdout>
+		</streams>
+	</consistentSNPsTask>
 
-    <!-- Use consistent SNPs for a sample to identify the strain -->
-    <identifyStrainTask id="4" name="identifyStrain" version="1" processBlock="samples" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">3</depends>
-        </dependencies>
-        <parameter>
-            <input>${OUTPUT}/consistent/consistentSNPs_{$SAMPLE}.txt</input>
-            <reference>${REFERENCE_SNPS}</reference>
-            <output>${OUTPUT}/strains/strain_{$SAMPLE}.txt</output>
-            <config>${CONFIG}</config>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/strain/.{$SAMPLE}.err</stderr>
-            <stdout>${LOGS}/strain/.{$SAMPLE}.out</stdout>
-        </streams>
-    </identifyStrainTask>
+	<!-- Use consistent SNPs for a sample to identify the strain -->
+	<identifyStrainTask id="4" name="identifyStrain" version="1" processBlock="samples" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">3</depends>
+		</dependencies>
+		<parameter>
+			<input>${OUTPUT}/consistent/consistentSNPs_{$SAMPLE}.txt</input>
+			<reference>${REFERENCE_SNPS}</reference>
+			<output>${OUTPUT}/strains/strain_{$SAMPLE}.txt</output>
+			<config>${CONFIG}</config>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/strain/.{$SAMPLE}.err</stderr>
+			<stdout>${LOGS}/strain/.{$SAMPLE}.out</stdout>
+		</streams>
+	</identifyStrainTask>
 
-    <!-- Match the consistent SNPs to features (i.e. genes, exons, introns, CDS, ...) annotated in a GTF-file -->
-    <gtfMatcherTask id="5" name="gtfMatcher_SNPs" version="1" processBlock="samples" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">3</depends>
-        </dependencies>
-        <parameter>
-            <gtf>${GTF}</gtf>
-            <infile>${OUTPUT}/consistent/consistentSNPs_{$SAMPLE}.txt</infile>
-            <out>${OUTPUT}/gtfMatcher_SNPs/{$SAMPLE}_matched_SNPs.txt</out>
-            <mode>SNP</mode>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/gtfMatcher_SNPs/.{$SAMPLE}.err</stderr>
-            <stdout>${LOGS}/gtfMatcher_SNPs/.{$SAMPLE}.out</stdout>
-        </streams>
-    </gtfMatcherTask>
+	<!-- Match the consistent SNPs to features (i.e. genes, exons, introns, CDS, ...) annotated in a GTF-file -->
+	<gtfMatcherTask id="5" name="gtfMatcher_SNPs" version="1" processBlock="samples" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">3</depends>
+		</dependencies>
+		<parameter>
+			<gtf>${GTF}</gtf>
+			<infile>${OUTPUT}/consistent/consistentSNPs_{$SAMPLE}.txt</infile>
+			<out>${OUTPUT}/gtfMatcher_SNPs/{$SAMPLE}_matched_SNPs.txt</out>
+			<mode>SNP</mode>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/gtfMatcher_SNPs/.{$SAMPLE}.err</stderr>
+			<stdout>${LOGS}/gtfMatcher_SNPs/.{$SAMPLE}.out</stdout>
+		</streams>
+	</gtfMatcherTask>
 
-    <!-- Get bedgraph file for each replicate that contains the coverage of the replicate over the whole genome -->	
-    <genomeCoverageTask id="6" name="genomeCoverage" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <parameter>
-            <bam>{$BAM}</bam>
-            <outPrefix>${OUTPUT}/genomeCoverage/[$BAM,1]</outPrefix>
-            <tdf>False</tdf>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/genomeCoverage/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/genomeCoverage/.[$BAM,1].out</stdout>
-        </streams>
-    </genomeCoverageTask>
+	<!-- Get bedgraph file for each replicate that contains the coverage of the replicate over the whole genome -->	
+	<genomeCoverageTask id="6" name="genomeCoverage" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<parameter>
+			<bam>{$BAM}</bam>
+			<outPrefix>${OUTPUT}/genomeCoverage/[$BAM,1]</outPrefix>
+			<tdf>False</tdf>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/genomeCoverage/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/genomeCoverage/.[$BAM,1].out</stdout>
+		</streams>
+	</genomeCoverageTask>
 
-    <!-- Generate BAM files containing only clipped reads -->
-    <extractClippedReadsTask id="7" name="extractionOfClippedReads" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <parameter>
-            <bam>{$BAM}</bam>
-            <out>${OUTPUT}/clippedReads/[$BAM,1]_clipped.bam</out>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/clippedReads/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/clippedReads/.[$BAM,1].out</stdout>
-        </streams>
-    </extractClippedReadsTask>
+	<!-- Generate BAM files containing only clipped reads -->
+	<extractClippedReadsTask id="7" name="extractionOfClippedReads" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<parameter>
+			<bam>{$BAM}</bam>
+			<out>${OUTPUT}/clippedReads/[$BAM,1]_clipped.bam</out>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/clippedReads/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/clippedReads/.[$BAM,1].out</stdout>
+		</streams>
+	</extractClippedReadsTask>
 
-    <!-- Given the bedgraph and "clipped-read-BAM-file", call insertions and deletions-->
-    <svCallerTask id="8" name="structuralVariantCaller" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">6</depends>
-            <depends separate="true">7</depends>
-        </dependencies>
-        <parameter>
-            <bed>${OUTPUT}/genomeCoverage/[$BAM,1].bedgraph</bed>
-            <bam>${OUTPUT}/clippedReads/[$BAM,1]_clipped.bam</bam>
-            <out_del>${OUTPUT}/deletions/[$BAM,1]_deletions.txt</out_del>
-            <out_ins>${OUTPUT}/insertions/[$BAM,1]_insertions.txt</out_ins>
-            <con_path>${OUTPUT}/consensus/[$BAM,1]_consensus.fa</con_path>
-            <ref>${REFERENCE}</ref>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/svCaller/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/svCaller/.[$BAM,1].out</stdout>
-        </streams>
-    </svCallerTask>
+	<!-- Given the bedgraph and "clipped-read-BAM-file", call insertions and deletions-->
+	<svCallerTask id="8" name="structuralVariantCaller" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">6</depends>
+			<depends separate="true">7</depends>
+		</dependencies>
+		<parameter>
+			<bed>${OUTPUT}/genomeCoverage/[$BAM,1].bedgraph</bed>
+			<bam>${OUTPUT}/clippedReads/[$BAM,1]_clipped.bam</bam>
+			<out_del>${OUTPUT}/deletions/[$BAM,1]_deletions.txt</out_del>
+			<out_ins>${OUTPUT}/insertions/[$BAM,1]_insertions.txt</out_ins>
+			<con_path>${OUTPUT}/consensus/[$BAM,1]_consensus.fa</con_path>
+			<ref>${REFERENCE}</ref>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/svCaller/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/svCaller/.[$BAM,1].out</stdout>
+		</streams>
+	</svCallerTask>
 
-    <!-- Match deletions to features of a GTF-file -->
-    <gtfMatcherTask id="9" name="gtfMatcher_Deletions" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">8</depends>
-        </dependencies>
-        <parameter>
-            <gtf>${GTF}</gtf>
-            <infile>${OUTPUT}/deletions/[$BAM,1]_deletions.txt</infile>
-            <out>${OUTPUT}/gtfMatcher_Deletions/[$BAM,1]_matched_Deletions.txt</out>
-            <mode>DELETION</mode>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/gtfMatcher_Deletions/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/gtfMatcher_Deletions/.[$BAM,1].out</stdout>
-        </streams>
-    </gtfMatcherTask>
+	<!-- Match deletions to features of a GTF-file -->
+	<gtfMatcherTask id="9" name="gtfMatcher_Deletions" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">8</depends>
+		</dependencies>
+		<parameter>
+			<gtf>${GTF}</gtf>
+			<infile>${OUTPUT}/deletions/[$BAM,1]_deletions.txt</infile>
+			<out>${OUTPUT}/gtfMatcher_Deletions/[$BAM,1]_matched_Deletions.txt</out>
+			<mode>DELETION</mode>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/gtfMatcher_Deletions/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/gtfMatcher_Deletions/.[$BAM,1].out</stdout>
+		</streams>
+	</gtfMatcherTask>
 
-    <!-- Match insertions to features of a GTF-file -->
-    <gtfMatcherTask id="10" name="gtfMatcher_Insertions" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">8</depends>
-        </dependencies>
-        <parameter>
-            <gtf>${GTF}</gtf>
-            <infile>${OUTPUT}/insertions/[$BAM,1]_insertions.txt</infile>
-            <out>${OUTPUT}/gtfMatcher_Insertions/[$BAM,1]_matched_Insertions.txt</out>
-            <mode>INSERTION</mode>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/gtfMatcher_Insertions/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/gtfMatcher_Insertions/.[$BAM,1].out</stdout>
-        </streams>
-    </gtfMatcherTask>
+	<!-- Match insertions to features of a GTF-file -->
+	<gtfMatcherTask id="10" name="gtfMatcher_Insertions" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">8</depends>
+		</dependencies>
+		<parameter>
+			<gtf>${GTF}</gtf>
+			<infile>${OUTPUT}/insertions/[$BAM,1]_insertions.txt</infile>
+			<out>${OUTPUT}/gtfMatcher_Insertions/[$BAM,1]_matched_Insertions.txt</out>
+			<mode>INSERTION</mode>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/gtfMatcher_Insertions/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/gtfMatcher_Insertions/.[$BAM,1].out</stdout>
+		</streams>
+	</gtfMatcherTask>
 
-    <!-- Run SPades to make a sequence assembly -->
-    <SPadesTask id="11" name="SPades" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">8</depends>
-        </dependencies>
-        <parameter>
-            <forward>{$FASTQ_R1}</forward>
-            <reverse>{$FASTQ_R2}</reverse>
-            <cons_path>${OUTPUT}/consensus/[$BAM,1]_consensus.fa</cons_path>
-            <outFolder>${OUTPUT}/SPades/[$BAM,1]_spades</outFolder>
-            <ignoreConsensusExistence>true</ignoreConsensusExistence>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/SPades/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/SPades/.[$BAM,1].out</stdout>
-        </streams>
-    </SPadesTask>
+	<!-- Run SPades to make a sequence assembly -->
+	<SPadesTask id="11" name="SPades" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">8</depends>
+		</dependencies>
+		<parameter>
+			<forward>{$FASTQ_R1}</forward>
+			<reverse>{$FASTQ_R2}</reverse>
+			<cons_path>${OUTPUT}/consensus/[$BAM,1]_consensus.fa</cons_path>
+			<outFolder>${OUTPUT}/SPades/[$BAM,1]_spades</outFolder>
+			<ignoreConsensusExistence>true</ignoreConsensusExistence>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/SPades/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/SPades/.[$BAM,1].out</stdout>
+		</streams>
+	</SPadesTask>
 
-    <!-- Index the assembled sequences generated by SPades -->
-    <bwaIndexTask id="12" name="bwaIndex" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">11</depends>
-        </dependencies>
-        <parameter>
-            <fasta>${OUTPUT}/SPades/[$BAM,1]_spades/transcripts.fasta</fasta>
-            <ignoreFastaExistence>true</ignoreFastaExistence>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/bwaIndex/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/bwaIndex/.[$BAM,1].out</stdout>
-        </streams>
-    </bwaIndexTask>
+	<!-- Index the assembled sequences generated by SPades -->
+	<bwaIndexTask id="12" name="bwaIndex" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">11</depends>
+		</dependencies>
+		<parameter>
+			<fasta>${OUTPUT}/SPades/[$BAM,1]_spades/transcripts.fasta</fasta>
+			<ignoreFastaExistence>true</ignoreFastaExistence>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/bwaIndex/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/bwaIndex/.[$BAM,1].out</stdout>
+		</streams>
+	</bwaIndexTask>
 
-    <!-- Search for the consensus sequences generated by the svCaller module in the index file -->
-    <BWATask id="13" name="bwaMEM" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">8</depends>
-            <depends separate="true">12</depends>
-        </dependencies>
-        <parameter>
-            <in1>${OUTPUT}/consensus/[$BAM,1]_consensus.fa</in1>
-            <out>${OUTPUT}/bwaMEM/[$BAM,1]_consensus.sam</out>
-            <all>true</all>
-            <index>${OUTPUT}/SPades/[$BAM,1]_spades/transcripts.fasta</index>
-            <ignoreIndexExistence>true</ignoreIndexExistence>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/bwaMEM/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/bwaMEM/.[$BAM,1].out</stdout>
-        </streams>
-    </BWATask>
+	<!-- Search for the consensus sequences generated by the svCaller module in the index file -->
+	<BWATask id="13" name="bwaMEM" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">8</depends>
+			<depends separate="true">12</depends>
+		</dependencies>
+		<parameter>
+			<in1>${OUTPUT}/consensus/[$BAM,1]_consensus.fa</in1>
+			<out>${OUTPUT}/bwaMEM/[$BAM,1]_consensus.sam</out>
+			<all>true</all>
+			<index>${OUTPUT}/SPades/[$BAM,1]_spades/transcripts.fasta</index>
+			<ignoreIndexExistence>true</ignoreIndexExistence>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/bwaMEM/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/bwaMEM/.[$BAM,1].out</stdout>
+		</streams>
+	</BWATask>
 
-    <!-- Analyze the detected consensus sequences and determine/extract sequences of insertions -->
-    <assemblyAnalyzerTask id="14" name="assemblyAnalyzer" version="1" processBlock="replicates" executor="localHost" notify="enabled">
-        <dependencies>
-            <depends separate="true">13</depends>
-        </dependencies>
-        <parameter>
-            <fasta>${OUTPUT}/SPades/[$BAM,1]_spades/transcripts.fasta</fasta>
-            <sam>${OUTPUT}/bwaMEM/[$BAM,1]_consensus.sam</sam>
-            <out>${OUTPUT}/assemblyAnalyzer/[$BAM,1]_sequences.fa</out>
-            <ignoreFastaExistence>true</ignoreFastaExistence>
-        </parameter>
-        <streams>
-            <stderr>${LOGS}/assemblyAnalyzer/.[$BAM,1].err</stderr>
-            <stdout>${LOGS}/assemblyAnalyzer/.[$BAM,1].out</stdout>
-        </streams>
-    </assemblyAnalyzerTask>
+	<!-- Analyze the detected consensus sequences and determine/extract sequences of insertions -->
+	<assemblyAnalyzerTask id="14" name="assemblyAnalyzer" version="1" processBlock="replicates" executor="localHost" notify="enabled">
+		<dependencies>
+			<depends separate="true">13</depends>
+		</dependencies>
+		<parameter>
+			<fasta>${OUTPUT}/SPades/[$BAM,1]_spades/transcripts.fasta</fasta>
+			<sam>${OUTPUT}/bwaMEM/[$BAM,1]_consensus.sam</sam>
+			<out>${OUTPUT}/assemblyAnalyzer/[$BAM,1]_sequences.fa</out>
+			<ignoreFastaExistence>true</ignoreFastaExistence>
+		</parameter>
+		<streams>
+			<stderr>${LOGS}/assemblyAnalyzer/.[$BAM,1].err</stderr>
+			<stdout>${LOGS}/assemblyAnalyzer/.[$BAM,1].out</stdout>
+		</streams>
+	</assemblyAnalyzerTask>
 
 </tasks>
 </watchdog>

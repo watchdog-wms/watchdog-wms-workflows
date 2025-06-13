@@ -23,13 +23,12 @@ Required software:
 * Java (for running Watchdog, JDK 11 or higher, https://www.oracle.com/java/technologies/downloads/)
 * Watchdog (https://www.bio.ifi.lmu.de/software/watchdog/, see below for further installation instructions)
 * Conda, e.g. miniforge (https://github.com/conda-forge/miniforge)
-* VarScan (https://varscan.sourceforge.net/)
 * All other required software is automatically loaded using conda during the workflow run. This takes some time when you run the VariantCallerPipeline workflow for the first time or if you delete the conda environments between runs.
 
 ---
 
 How to use the VariantCallerPipeline:
-* Install Watchdog (see below), Conda and VarScan.
+* Install Watchdog (see below) and Conda.
 * Download the workflow xml file from https://raw.githubusercontent.com/watchdog-wms/watchdog-wms-workflows/master/VariantCallerPipeline/Watchdog_VariantCallerPipeline.xml
 * Adapt the workflow xml file (= Watchdog_VariantCallerPipeline.xml) using a text or XML editor. All places in the xml file that have to be adjusted are marked with a TODO comment above the relevant line. 
 * To run the workflow, you only have to adjust the installation paths for Watchdog and Conda and the paths to the required directories and files and the directory in which you want to store conda environments for individual tasks.
@@ -79,7 +78,6 @@ Input files:
 | sample_B             | /path/to/replicate_1               | /path/to/forward/reads/replicate_1      | /path/to/reverse/reads/replicate_1     |
 | . . .            | . . .      | . . .               | . . .    |
 
-* `VarScan.jar`: file that is required as input for the second module (VarScan) to call SNPs. It should be located in the installation directory of VarScan.
 
 ---
 
