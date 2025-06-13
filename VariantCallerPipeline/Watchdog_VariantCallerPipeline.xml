@@ -5,8 +5,8 @@
 <settings>
 	<constants>
 		<!--  TODO: change BASE directory name, where results and log files are stored -->
-		<const name="BASE">/path/to/base/directory</const>
-		<const name="OUTPUT">${BASE}/results</const>
+		<const name="BASE">/path/to/base/directory/</const>
+		<const name="OUTPUT">${BASE}/results/</const>
 		<const name="LOGS">${BASE}/logs/</const>
 		<!--  TODO: change file paths to input files -->
 		<const name="REFERENCE">/path/to/reference_genome.fa</const>
@@ -16,7 +16,7 @@
 		<const name="samples">/path/to/input/samples.txt</const>
 		<const name="replicates">/path/to/input/replicates.txt</const>
 		<!--  TODO: change the path to the directory in which you want to store the conda environments for the individual tasks -->
-		<const name="CONDA_ENV_PATH">/path/to/conda_watchdog_env</const>
+		<const name="CONDA_ENV_PATH">/path/to/conda_watchdog_env/</const>
 	</constants>
 	<wrappers>
 		<!-- TODO: change path to conda-->
