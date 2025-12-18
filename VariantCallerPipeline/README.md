@@ -86,16 +86,16 @@ Output:
 There are two main output directories:
 * `logs`: directory, in which log files containing standard out (.out) and standard error (.err) for individual (sub)tasks are stored.
 * `results`: directory, in which files that contain analysis results from the pipeline are stored.
-   * `bcftools`: directory containing output files from bcftools in the variant call format.
-   * `varscan`: directory containing output files from VarScan in a (comparable) variant call format.
-   * `consistent`: directory containing files with consistent SNPs for each sample.
-   * `strains`: directory containing files with virus strain predictions for each sample.
+   * `bcftools`: directory containing output files from bcftools in the variant call format (VCF).
+   * `varscan`: directory containing output files from VarScan in a (comparable) variant call format (VCF).
+   * `consistent`: directory containing files with consistent SNPs for each sample (tab-separated file, columns: CHR=chromosome, POS=chromosome location, REF=nucleotide in reference genome, ALT=observed nucleotide)
+   * `strains`: directory containing files with virus strain predictions for each sample, including distances for all strains.
    * `gtfMatcher_SNPs`: directory containing files with information about features (e.g. genes) that matched to consistent SNPs.
-   * `genomeCoverage`: directory containing bedgraph files.
+   * `genomeCoverage`: directory containing bedgraph files of read coverage per position.
    * `clippedReads`: directory containing BAM files with only clipped reads.
-   * `deletions`: directory containing files with detected deletions.
-   * `insertions`: directory containing files with detected insertions.
-   * `consensus`: directory containing files with consensus sequences of insertion start and end.
+   * `deletions`: directory containing files with detected deletions (tab-separated file, columns: CHR=chromosome, START=start of deletion, END=end of deletion).
+   * `insertions`: directory containing files with detected insertions (tab-separated file, columns: CHR=chromosome, POSITION=genomic position of insertion, OVERLAP=overlap between the ends of the inserted sequence and the surrounding genome sequences).
+   * `consensus`: directory containing fasta files with consensus sequences of insertion start and end extracted from clipped reads.
    * `gtfMatcher_deletions`: directory containing files with information about features (e.g. genes) that matched to detected deletions.
    * `gtfMatcher_insertions`: directory containing files with information about features (e.g. genes) that matched to detected insertions.
    * `SPades`: directory containing output directories for the assemblies by SPades.
